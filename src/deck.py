@@ -1,39 +1,40 @@
 from random import randrange
-from Card import *
+from Enums import Suit
+from Enums import Face
+from Card import Card
 
 class Deck:
+    '''
+    Creates an unshuffled deck.
+    '''
     def __init__(self):
-        # Create the deck
         self.deck = list();
-        self.drawn = list();
-        for face in Face._facesList:
-            for value in Value._valuesList:
-                self.deck.append(Card(face, value));
-        self.shuffle();
+        self.discard = list();
 
-    def __str__(self):
-        s = "{";
-        for i in range(0, len(self.deck)):
-            s += "{0}:{1}\r\n".format(self.deck[i].getFace(), self.deck[i].getValue());
-        s += "}"
-        return s;
+        for suit in Suit.suits.itervalues():
+            for face in  Face.faces.itervalues():
+                self.deck.append(Card(suit, face));
 
-    def shuffle(self):
-        # Perform the fisher-yates shuffle on it
-        l = len(self.deck);
-        for i in range(0, l-1):
-            j = randrange(i, l);
-            self.deck[i], self.deck[j] = self.deck[j], self.deck[i];
+    '''
+    Gets the top card from the deck.
+    '''
+    def deal(self):
+        card = self.deck.pop();
+        self.discard.add(card);
+        return card;
 
-    def draw(self):
-        draw = self.deck.pop();
-        self.drawn.append(draw);
-        return draw;
-
+    '''
+    Adds all cards in discard back to the deck.
+    '''
     def rebuild(self):
-        # While the drawn pile still has cards in it
-        while self.drawn:
-            # Add them back to the deck
-            self.deck.append(self.drawn.pop());
-        # Shuffle the deck
-        self.shuffle();
+        while self.discard:
+            self.deck.append(self.discard.pop());
+
+    '''
+    Shuffles the deck using Fisher-Yates.
+    '''
+    def shuffle(self):
+        n = len(self.deck);
+        for i in range (i, n-2):
+            j = randrange(i, n);
+            a[i], a[j] = a[j], a[i];
