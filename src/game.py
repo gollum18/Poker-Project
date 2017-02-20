@@ -3,6 +3,7 @@ from Bot import Bot
 from Deck import Deck
 from Console import Console
 from Enums import *
+import Eval
 
 class Game:
     def __init__(self, big, little, startingChips):
@@ -39,13 +40,30 @@ class Game:
             self.player.emptyHand();
 
     def evalHand(self, cards):
-        # Check for all the possible hand ranks and return
-        #   appropriate value
-        return 0;
+        if Eval.isRoyalFlush(cards):
+            return 8;
+        elif Eval.isStraightFlush(cards):
+            return 7;
+        elif Eval.isFourKind(cards):
+            return 6;
+        elif Eval.isFullHouse(cards):
+            return 5;
+        elif Eval.isFlush(cards):
+            return 4;
+        elif Eval.isStraigt(cards):
+            return 3;
+        elif Eval.isThreeKind(cards):
+            return 2;
+        elif isTwoPair(cards):
+            return 1;
+        elif isPair(cards):
+            return 0;
+        
 
     def resolveSplit(self, rank, phand, bhand):
-        # Resolve the split based on rank
-        return 0;
+        if rank == 8:
+            return 0;
+        elif 
         
     def startGame(self):
         # Holds cards on the table
@@ -86,7 +104,8 @@ class Game:
 
                 # Print out the table and players cards
                 Console.write("Table Cards: {0}".format(table));
-                Console.write("Your Cards: {0}".format(self.player.getHand()););
+                Console.write("Your Cards: {0}".format(self.player.getHand()));
+                console.write("Your Chips: {0}".format(self.player.getChips()));
 
                 # Get the actions from the players
                 if dealer == 0:
@@ -95,21 +114,29 @@ class Game:
                 else:
                     # Get player action
                     # Get bot action
-                
-                
+
             # Evaluate the players hands
-            playerrank = evalHand(set(self.player.getHand(), table));
-            botrank = evalHand(set(self.bot.getHand(), table));
+            phand = self.player.getHand.union(table);
+            bhand = self.bot.getHand.union(table);
+            playerrank = evalHand(phand);
+            botrank = evalHand(bhand);
 
             # player has won
-            if playerrank < botrank:
+            if playerrank > botrank:
                 self.player.addChips(self.pot):
             # Bot has won
-            elif (botrank < playerrank):
+            elif (botrank > playerrank):
                 self.bot.addChips(self.pot);
             # Resolve the split
             else:
-                resolveSplit();
+                resolve = resolveSplit(playerrank, phand, bhand)
+                if resolve == 0: # Tie
+                    self.player.addChips(self.pot/2);
+                    self.bot.addChips(self.pot/2);
+                elif (resolve == 1): # Player
+                    self.player.addChips(self.pot);
+                else: # Bot
+                    self.bot.addChips(self.pot);
 
             # Reset the deck
             self.deck.rebuild();
