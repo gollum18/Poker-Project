@@ -36,7 +36,8 @@ class Game:
         self.winner = None;
         for player in self.players:
             self.player.subChips(self.player.getChips());
-            self.player.addChips();
+            self.player.addChips(startingChips);
+            self.bot.addChips(startingChips);
             self.player.emptyHand();
 
     def evalHand(self, cards):

@@ -23,9 +23,9 @@ class Card:
         return hash((self.suit, self.face));
 
     def __cmp__(self, other):
-        if ranks[self.getFace()] > ranks[self.getFace()]:
+        if ranks[self.getFace()] > ranks[other.getFace()]:
             +1;
-        elif ranks[self.getFace()] < ranks[self.getFace()]:
+        elif ranks[self.getFace()] < ranks[other.getFace()]:
             -1;
         else:
             return 0;
