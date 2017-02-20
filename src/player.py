@@ -3,6 +3,9 @@ class Player:
         self.chips = chips;
         self.cards = set();
 
+    def __str__(self):
+        return "Player Chips: {0}".format(self.chips);
+
     def addToHand(self, card):
         self.cards.add(card);
 
