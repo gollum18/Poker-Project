@@ -11,16 +11,16 @@ class Deck:
         self.deck = list();
         self.discard = list();
 
-        for suit in Suit.suits.itervalues():
-            for face in  Face.faces.itervalues():
+        for suit in Suit.suits:
+            for face in  Face.faces:
                 self.deck.append(Card(suit, face));
 
     '''
     Gets the top card from the deck.
     '''
-    def deal(self):
+    def draw(self):
         card = self.deck.pop();
-        self.discard.add(card);
+        self.discard.append(card);
         return card;
 
     '''
@@ -35,6 +35,6 @@ class Deck:
     '''
     def shuffle(self):
         n = len(self.deck);
-        for i in range (i, n-2):
+        for i in range (0, n-2):
             j = randrange(i, n);
-            a[i], a[j] = a[j], a[i];
+            self.deck[i], self.deck[j] = self.deck[j], self.deck[i];

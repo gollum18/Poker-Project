@@ -50,9 +50,9 @@ class Game:
                 self.players[1].addCard(self.deck.draw());
 
             # Loop through all poker stages
-            for stage, count in PokerStages.stages:
+            for stagein PokerStages.stages:
                 # Add cards to the table
-                for i in range (i, count):
+                for i in range (i, stage):
                     table.add(self.deck.draw());
 
                 # Get the actions from the players
