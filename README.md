@@ -10,4 +10,5 @@ Requires Python 2.7 and the Deuces poker eval library.
 You can get Python for your environment from python.org
 
 After you have python installed and added to your path, you can install deuces using this command from cmd or powershell.
-python -m pip install deuces
+python -m pip install deuces (Windows) or just
+pip install deuces (Linux)
