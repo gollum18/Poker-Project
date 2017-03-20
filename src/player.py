@@ -31,15 +31,27 @@ class Player:
             else:
                 self.chips -= other;
 
+    '''
+    Empties the players
+    '''
     def empty(self):
         del self.cards[:];
 
+    '''
+    Get the players hand.
+    '''
     def getCards(self):
         return self.cards;
 
+    '''
+    Get the players chips.
+    '''
     def getChips(self):
         return self.chips;
 
+    '''
+    Get the players move from the command line.
+    '''
     def getMove(self, cardsOnTable, pot, ante, prevMove):
         print("These Cards are on the Table:");
         Card.print_pretty_cards(cardsOnTable);
