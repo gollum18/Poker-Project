@@ -1,31 +1,57 @@
-def Table:
+from deuces import Deck
+
+'''
+Defines a poker table.
+A poker table stores the deck, pot, ante, and the cards on the board.
+'''
+class Table:
     '''
-    Create a poker table. A poker table contains the cards on the table,
-    the pot, and the ante.
+    Creates a poker table containing the deck, pot, ante, and a means to store the
+    cards.
     '''
     def __init__(self):
-        self.cards = [];
+        self.deck = Deck();
         self.pot = 0;
         self.ante = 0;
+        self.cards = [];
 
-    def __del__(self):
-        del self.cards[:];
-        self.cards = None;
+    '''
+    Adds a card to the cards on the table or increments the pot and ante.
+    '''
+    def __add__(self, other):
+        if type(other) is Card:
+            self.cards.append(other);
+        elif type(other) is int:
+            if other > 0:
+                self.pot += ante + other;
+                self.ante += other;
 
-    def addCard(self, card):
-        if self.cards == None:
-            self.cards = [];
-        self.cards.append(card);
+    '''
+    Returns the ante.
+    '''
+    def getAnte(self):
+        return self.ante;
 
     def getCards(self):
         return self.cards;
 
+    '''
+    Returns the pot.
+    '''
     def getPot(self):
         return self.pot;
 
-    def getAnte(self):
-        return self.ante;
+    '''
+    Draws from the deck.
+    '''
+    def draw(self):
+        return self.deck.draw();
 
-    def increment(self, amt):
-        self.pot += (ante + amt);
-        self.ante += amt;
+    '''
+    Resets the table.
+    '''
+    def reset(self):
+        self.deck.shuffle();
+        self.pot = 0;
+        self.ante = 0;
+        del self.cards[:];
