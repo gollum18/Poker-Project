@@ -1,4 +1,5 @@
 from deuces import Card
+from constants import Constants
 
 '''
 Defines a player.
@@ -13,18 +14,21 @@ class Player:
         self.cards = [];
 
     '''
-    Adds chips to the chips count or a card to the hand.
+    Adds a card to the players hand
     '''
-    def __add__(self, other):
-        if type(other) is int:
-            self.chips += other;
-        elif type(other) is Card:
-            self.cards.append(other);
+    def addCard(self, card):
+        self.cards.append(card);
+
+    '''
+    Adds chips to the chips count.
+    '''
+    def addChips(self, chips):
+        self.chips += chips;
 
     '''
     Subtracts chips from the chip count.
     '''
-    def __sub__(self, other):
+    def subChips(self, other):
         if type(other) is int:
             if self.chips - other < 0:
                 self.chips == 0;
@@ -57,20 +61,29 @@ class Player:
         Card.print_pretty_cards(cardsOnTable);
         print("Your Cards Are:");
         Card.print_pretty_cards(self.cards);
-        print("Pot is {0}, Ante is {1}.".format(pot, ante));
+        print("You have ${0}, Pot is ${1}, Ante is ${2}.".format(self.chips, pot, ante));
 
         move = "";
-        if prevMove = "a":
-            while move != 'c' or 'f':
-                move = raw_input("Bot went all in!! Do you CALL [c], or FOLD [f]: ").ower();
+        if prevMove == Constants.ALLIN:
+            while move != "c" and move != "f":
+                move = raw_input("Bot went all in!! Do you CALL [c], or FOLD [f]: ").lower();
         else:
-            while move != 'a' or move != "c" or move != "f" or move != "r":
-                move = raw_input("ALL IN [a], CALL [c], FOLD [f], or RAISE [r]: ").lower();
-        return move;
+            while move != "a" and move != "c" and move != "f" and move != "r":
+                move = raw_input("Do you go ALL IN [a], CALL [c], FOLD [f], or RAISE [r]: ").lower();
+        if move == "a":
+            return Constants.ALLIN;
+        elif move == "c":
+            return Constants.CALL;
+        elif move == "f":
+            return Constants.FOLD;
+        elif move == "r":
+            return Constants.RAISE;
 
     def getRaise(self):
         amt = -1;
         while amt < 0:
             try:
                 amt = int(raw_input("Raise By: "));
+            except ValueError:
+                print("Must input a valid amount!");
         return amt;
