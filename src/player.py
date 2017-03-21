@@ -1,4 +1,5 @@
 from deuces import Card
+from constants import Constants
 
 '''
 Defines a player.
@@ -15,7 +16,7 @@ class Player:
     '''
     Adds chips to the chips count or a card to the hand.
     '''
-    def __add__(self, other):
+    def add(self, other):
         if type(other) is int:
             self.chips += other;
         elif type(other) is Card:
@@ -24,7 +25,7 @@ class Player:
     '''
     Subtracts chips from the chip count.
     '''
-    def __sub__(self, other):
+    def sub(self, other):
         if type(other) is int:
             if self.chips - other < 0:
                 self.chips == 0;
@@ -60,11 +61,11 @@ class Player:
         print("Pot is {0}, Ante is {1}.".format(pot, ante));
 
         move = "";
-        if prevMove = "a":
-            while move != 'c' or 'f':
+        if prevMove == Constants.ALLIN:
+            while move != Constants.CALL or Constants.FOLD:
                 move = raw_input("Bot went all in!! Do you CALL [c], or FOLD [f]: ").ower();
         else:
-            while move != 'a' or move != "c" or move != "f" or move != "r":
+            while move != Constants.ALLIN or move != Constants.CALL or move != Constants.FOLD or move != Constants.RAISE:
                 move = raw_input("ALL IN [a], CALL [c], FOLD [f], or RAISE [r]: ").lower();
         return move;
 
@@ -73,4 +74,6 @@ class Player:
         while amt < 0:
             try:
                 amt = int(raw_input("Raise By: "));
+            except ValueError:
+                print("Must input a valid amount!");
         return amt;
