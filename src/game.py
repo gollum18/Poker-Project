@@ -57,123 +57,114 @@ class Game:
     Plays a round.
     '''
     def playRound(self):
+        # Setup the round
         pot = self.big + self.little;
-        self.player.sub(self.little if self.dealer == Constants.PLAYER else self.big);
-        self.bot.sub(self.little if self.dealer == Constants.BOT else self.big);
+        self.player.subChips(self.big if self.dealer == Constants.PLAYER else self.little);
+        self.bot.subChips(self.big if self.dealer == Constants.BOT else self.little);
         ante = self.little;
+
+        # Deal out the cards
         for i in range(0, 2):
             if self.dealer == Constants.PLAYER:
-                self.bot.add(self.table.draw());
-                self.player.add(self.table.draw());
+                self.bot.addCard(self.table.draw());
+                self.player.addCard(self.table.draw());
             else:
-                self.player.add(self.table.draw());
-                self.bot.add(self.table.draw());
-        stage = None;
-        move = None;
-        prevMove = None;
+                self.player.addCard(self.table.draw());
+                self.bot.addCard(self.table.draw());
+
+        # TODO: Implement Logic Here
+        stage = Constants.FLOP;
         turn = (Constants.BOT if self.dealer == Constants.PLAYER else Constants.PLAYER);
-        while stage != Constants.EVAL or stage != Constants.FOLD or stage Constants.ALLIN:
+        move = None;
+        while stage != Constants.EVAL and stage != Constants.ALLIN and stage != Constants.FOLD:
             if stage == Constants.FLOP:
                 for i in range(0, 3):
-                    self.table.add(self.table.draw());
+                    self.table.addCard(self.table.draw());
             else:
-                self.table.add(self.table.draw());
-            # Get the players moves, respond to them
-            for iterTurn in range(0, 2):
-                prevMove = move;
-                move = (self.player.getMove(self.table.getCards(), pot, ante, prevMove) if turn == Constants.PLAYER else self.bot.getMove());
-                turn = (Constants.PLAYER if turn == Constants.BOT else Constants.PLAYER);
-                # Check for alternative path 2
+                self.table.addCard(self.table.draw());
+            # Get the players moves, based on dealer
+            for i in range(0, 2):
+                # Get the move
+                if turn == Constants.PLAYER:
+                    move = self.player.getMove(self.table.getCards(), pot, ante, move);
+                else:
+                    move = self.bot.getMove(move);
+                # Check if it is a fold or allin
                 if move == Constants.ALLIN:
                     stage = Constants.ALLIN;
                     break;
-                # Check for alternative path 1
                 elif move == Constants.FOLD:
                     stage = Constants.FOLD;
                     break;
                 elif move == Constants.CALL:
                     pot += ante;
                     if turn == Constants.PLAYER:
-                        self.bot.sub(ante);
+                        self.player.subChips(ante);
                     else:
-                        self.player.sub(ante);
+                        self.bot.subChips(ante);
                 elif move == Constants.RAISE:
                     amt = 0;
                     if turn == Constants.PLAYER:
-                        amt = self.bot.getRaise();
-                        self.bot.sub(ante+amt);
+                        amt = self.player.getRaise();
+                        self.player.subChips(ante+amt);
                     else:
                         amt = self.bot.getRaise();
-                        self.player.sub(ante+amt);
+                        self.bot.subChips(ante+amt);
                     ante += amt;
                     pot += ante;
-            # Advances to the next stage
-            if stage == Constants.FLOP:
+                turn = (Constants.PLAYER if turn == Constants.BOT else Constants.BOT);
+            # End of stage, advance
+            if stage == Constants.ALLIN or stage == Constants.FOLD:
+                break;
+            elif stage == Constants.FLOP:
                 stage = Constants.TURN;
             elif stage == Constants.TURN:
-                stage = Constants.RIVER:
+                stage = Constants.RIVER;
             elif stage == Constants.RIVER:
                 stage = Constants.EVAL;
-        # Check for eval conditions
-        # Can either be EVAL, FOLD, or ALLIN
-        # Each stage is handled differently
-        # Normal path, reached through expected game play
+
+        # Check for the paths
+        # The normal path
         if stage == Constants.EVAL:
             winner = self._evaluate();
-            if winner == Constants.SPLIT:
-                self.player.add(pot/2);
-                self.bot.add(pot/2);
-            elif winner == Constants.PLAYER:
-                self.player.add(pot);
+            if winner == Constants.PLAYER:
+                self.player.addChips(pot);
             elif winner == Constants.BOT:
-                self.bot.add(pot);
-        # Alternative path 1, a player folded
+                self.bot.addChips(pot);
+            else:
+                self.player.addChips(pot/2);
+                self.bot.addChips(pot/2);
+        # Alternative path 1
         elif stage == Constants.FOLD:
-            # Here the player currently selected by turn is the next player after the fold
             if turn == Constants.PLAYER:
-                self.bot.add(pot);
+                self.bot.addChips(pot);
             else:
-                self.player.add(pot);
-        # Alternative path 2, a player went all in
+                self.player.addChips(pot);
+        # Alternative path 2
         elif stage == Constants.ALLIN:
-            # Get the other players response, same situation as in fold
-            response = None;
             if turn == Constants.PLAYER:
-                # Add the bots chips to the pot, sub them out
-                pot += self.bot.getChips();
-                self.bot.sub(self.bot.getChips());
-                # Get the Bots response
-                response = self.bot.getMove();
+                if self.bot.getMove(move) == Constants.FOLD:
+                    self.player.addChips(pot);
+                else:
+                    self.bot.subChips(ante);
+                    pot += ante;
             else:
-                # Add the players chips to the pot, sub them out
-                pot += self.player.getChips();
-                self.player.sub(self.player.getChips());
-                # Get the Players response
-                response = self.player.getMove(self.table.getCards(), pot, ante, Constants.ALLIN);
-            # Execute the response
-            if response == Constants.FOLD:
-                if turn == Constants.PLAYER:
-                    self.player.add(pot);
+                if self.player.getMove(self.table.getCards(), pot, ante, Constants.ALLIN) == Constants.FOLD:
+                    self.bot.addChips(pot);
                 else:
-                    self.bot.add(pot);
-            elif response == Constants.CALL:
-                if turn == Constants.PLAYER:
-                    self.bot.sub(ante);
-                else:
-                    self.player.sub(ante);
-                # Deal out the remaining cards
-                for i in range(0, 5-len(self.table.getCards())):
-                    self.table.add(self.table.draw());
-                # Handle like the eval stage, will fix reuse later
-                winner = self._evaluate();
-                if winner == Constants.SPLIT:
-                    self.player.add(pot/2);
-                    self.bot.add(pot/2);
-                elif winner == Constants.PLAYER:
-                    self.player.add(pot);
-                elif winner == Constants.BOT:
-                    self.bot.add(pot);
-        # Reset for the next round
+                    self.player.subChips(ante);
+                    pot += ante;
+            winner = self._evaluate();
+            if winner == Constants.PLAYER:
+                self.player.addChips(pot);
+            elif winner == Constants.BOT:
+                self.bot.addChips(pot);
+            else:
+                self.player.addChips(pot/2);
+                self.bot.addChips(pot/2);
+        # Subtract off the round
+        self.rounds -= 1;
+        # Reset for next round
         self.dealer = (Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER);
         self.player.empty();
         self.bot.empty();

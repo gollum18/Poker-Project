@@ -15,8 +15,8 @@ class Table:
     '''
     Adds a card to the cards on the table.
     '''
-    def add(self, card):
-        self.cards.append(other);
+    def addCard(self, card):
+        self.cards.append(card);
 
     def getCards(self):
         return self.cards;
