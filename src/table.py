@@ -11,12 +11,26 @@ class Table:
     def __init__(self):
         self.deck = Deck();
         self.cards = [];
+        self.pot = 0;
+        self.ante = 0;
 
     '''
     Adds a card to the cards on the table.
     '''
     def addCard(self, card):
         self.cards.append(card);
+
+    def addToAnte(self, amt):
+        self.ante += amt;
+
+    def addToPot(self, amt):
+        self.pot += amt;
+
+    def getAnte(self):
+        self.ante += amt;
+
+    def getPot(self):
+        return self.pot;
 
     def getCards(self):
         return self.cards;
@@ -33,3 +47,5 @@ class Table:
     def reset(self):
         self.deck.shuffle();
         del self.cards[:];
+        self.ante = 0;
+        self.pot = 0;
