@@ -63,8 +63,8 @@ class Game:
         self.table.addToAnte(self.little);
         self.table.addToPot(self.little+self.big);
         # Sub the blinds off
-        self.player.subChips(self.big if self.dealer == self.PLAYER else self.little);
-        self.bot.subChips(self.big if self.dealer == self.BOT else self.little);
+        self.player.subChips(self.big if self.dealer == Constants.PLAYER else self.little);
+        self.bot.subChips(self.big if self.dealer == Constants.BOT else self.little);
         # Stores the current player to go
         turn = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
         # Store the current stage of the game
@@ -77,7 +77,7 @@ class Game:
                     if i < 3:
                         self.table.addCard(self.table.draw());
                     elif 3 <= i < 5:
-                        if dealer == Constants.PLAYER:
+                        if self.dealer == Constants.PLAYER:
                             self.bot.addCard(self.table.draw());
                             self.player.addCard(self.table.draw());
                         else:
@@ -86,14 +86,25 @@ class Game:
             elif stage == Constants.TURN or Constants.RIVER:
                 self.table.addCard(self.table.draw());
 
-        # Get agent moves          
+            Card.print_pretty_cards(self.table.getCards());
+            
+            # Get agent moves
+
+            # Increment the stage
+            if stage == Constants.FLOP:
+                stage = Constants.TURN;
+            elif stage == Constants.TURN:
+                stage = Constants.RIVER;
+            elif stage == Constants.RIVER:
+                stage = Constants.EVAL;
 
         # Check for all paths
         if stage == Constants.EVAL:
-            self._evaluate(pot);
+            self._evaluate(self.table.getPot());
         elif stage == Constants.FOLD:
-            if 
+            print Constants.FOLD;
         elif stage == Constants.ALLIN:
+            print Constants.ALLIN;
 
         self.dealer = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
         self.player.empty();
