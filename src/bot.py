@@ -15,11 +15,9 @@ class Bot(Player):
     '''
     Gets the bots move.
     '''
-    def getMove(self, prevMove):
+    def getMove(self, state):
         #TODO: IMPLEMENT ME TO BE NON-TRIVIAL
-        if prevMove == Constants.ALLIN:
-            return choice([Constants.CALL, Constants.FOLD]);
-        return choice([Constants.ALLIN, Constants.CALL, Constants.FOLD, Constants.RAISE]);
+        return choice([Constants.CALL, Constants.FOLD]);
 
     '''
     Gets the bots raise.

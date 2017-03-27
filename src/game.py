@@ -69,6 +69,7 @@ class Game:
         turn = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
         # Store the current stage of the game
         stage = Constants.FLOP;
+        # Stores the previous move
 
         while stage != Constants.EVAL and stage != Constants.FOLD and stage != Constants.ALLIN:
             # Deal out the cards
@@ -88,7 +89,34 @@ class Game:
 
             Card.print_pretty_cards(self.table.getCards());
             
-            # Get agent moves
+            # Loop through the player moves
+            for i in range(0, 2):
+                if turn == Constants.PLAYER:
+                    move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
+                elif turn == Constants.BOT:
+                    move = self.bot.getMove();
+
+                # Deal with the most recent move
+                if move == Constants.ALLIN:
+                    if turn == Constants.PLAYER:
+                    elif turn == Constants.BOT:
+                elif move == Constants.FOLD:
+                elif move == Constants.CALL:
+                    if turn == self.Constants.PLAYER:
+                        self.player.subChips():
+                    elif turn == self.Constants.BOT:
+                        self.bot.subChips();
+                    self.table.addToPot(self.table.getAnte());
+                    self.table.addToAnte(self.table.getAnte());
+                elif move == Constants.RAISE:
+                    raiseAmt = 0
+                    if turn == Constants.PLAYER:
+                        raiseAmt = self.player.getRaise();
+                    elif turn == Constants.BOT:
+                        raiseAmt = self.bot.getRaise();
+                
+                # Switch turns    
+                turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
 
             # Increment the stage
             if stage == Constants.FLOP:
