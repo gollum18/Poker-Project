@@ -23,6 +23,7 @@ class Game:
         self.little = little;
         self.table = Table();
         self.eval = Evaluator();
+        self.moveLock = threading.Lock();
         self.dealer = choice([Constants.PLAYER, Constants.BOT]);
 
     '''
@@ -95,12 +96,16 @@ class Game:
                     move = self.bot.getMove();
 
                 # Deal with the most recent move
+                # If the move is allin or a fold, deal with it outside, they are special conditions
+                # Modifying data below, acquire lock and release when done
+                self.moveLock.acquire();
                 if move == Constants.ALLIN:
                     stage = move;
                     break;
                 elif move == Constants.FOLD:
                     stage = move;
                     break;
+                # Otherwise, deal with the move here
                 elif move == Constants.CALL:
                     if turn == self.Constants.PLAYER:
                         self.player.subChips(self.table.getAnte()):
@@ -118,6 +123,8 @@ class Game:
                         self.bot.subChips(self.table.getAnte() + raiseAmt);
                     self.table.addToPot(self.table.getAnte() + raiseAmt);
                     self.table.addToAnte(raiseAmt);
+                # Release the movelock
+                self.moveLock.release();
                 
                 # Switch turns    
                 turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
