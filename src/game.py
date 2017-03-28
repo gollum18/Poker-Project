@@ -40,8 +40,6 @@ class Game:
             self.player.addChips(pot/2);
             self.bot.addChips(pot/2);
 
-    
-
     '''
     Determines whether the game is over.
     A game is over if there are no more rounds, or a player is out of chips at the end
@@ -98,22 +96,28 @@ class Game:
 
                 # Deal with the most recent move
                 if move == Constants.ALLIN:
-                    if turn == Constants.PLAYER:
-                    elif turn == Constants.BOT:
+                    stage = move;
+                    break;
                 elif move == Constants.FOLD:
+                    stage = move;
+                    break;
                 elif move == Constants.CALL:
                     if turn == self.Constants.PLAYER:
-                        self.player.subChips():
+                        self.player.subChips(self.table.getAnte()):
                     elif turn == self.Constants.BOT:
-                        self.bot.subChips();
+                        self.bot.subChips(self.table.getAnte());
                     self.table.addToPot(self.table.getAnte());
                     self.table.addToAnte(self.table.getAnte());
                 elif move == Constants.RAISE:
                     raiseAmt = 0
                     if turn == Constants.PLAYER:
                         raiseAmt = self.player.getRaise();
+                        self.player.subChips(self.table.getAnte() + raiseAmt);
                     elif turn == Constants.BOT:
                         raiseAmt = self.bot.getRaise();
+                        self.bot.subChips(self.table.getAnte() + raiseAmt);
+                    self.table.addToPot(self.table.getAnte() + raiseAmt);
+                    self.table.addToAnte(raiseAmt);
                 
                 # Switch turns    
                 turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;

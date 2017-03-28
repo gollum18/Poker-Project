@@ -1,6 +1,6 @@
 from player import Player
-from random import choice
 from constants import Constants
+import random
 
 '''
 Defines a bot.
@@ -17,11 +17,20 @@ class Bot(Player):
     '''
     def getMove(self, state):
         #TODO: IMPLEMENT ME TO BE NON-TRIVIAL
-        return choice([Constants.CALL, Constants.FOLD]);
+        return random.choice([Constants.CALL, Constants.FOLD]);
 
     '''
-    Gets the bots raise.
+    Gets the bots betting type.
+    Total percent consists of our aggresiveness + opponents aggresiveness + normalize percentage.
+        Should always be between 0 and 1;
     '''
-    def getRaise(self):
-        #TODO: IMPLEMENT ME TO BE NON-TRIVIAL
-        return int(.5*self.chips);
+    def getRaiseType(self, totalPercent):
+        # Get the overall raise type
+        rType = None;
+        if totalPercent < .33:
+            rType = Constants.LOW;
+        elif totalPercent < .66:
+            rType = Constants.MEDIUM;
+        elif totalPercent < 1:
+            rType = Constants.HIGH;
+        return rType;
