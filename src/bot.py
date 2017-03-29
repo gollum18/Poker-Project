@@ -19,6 +19,10 @@ class Bot(Player):
         #TODO: IMPLEMENT ME TO BE NON-TRIVIAL
         return random.choice([Constants.CALL, Constants.FOLD]);
 
+    def getRaise(self):
+        #TODOL IMPLEMENT ME TO BE NON-TRIVIAL
+        return .5*self.getChips();
+
     '''
     Gets the bots betting type.
     Calculates a percentile used to determine the bet type. We factor in the AIs' aggression along with

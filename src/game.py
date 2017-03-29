@@ -4,6 +4,7 @@ from bot import Bot
 from table import Table
 from random import choice
 from constants import Constants
+import threading
 
 '''
 Defines a poker game.
@@ -27,12 +28,17 @@ class Game:
         self.dealer = choice([Constants.PLAYER, Constants.BOT]);
 
     '''
-    Determines the winner at the end of a round.
-    Will automatically deal out the pot.
+    Determines the winner at the end of a round. Will automatically deal out the pot.
+    This is a private to be called by this class only (hence the _), do not call it.
     '''
-    def _evaluate(self, pot):
-        pstr = self.eval.evaluate(self.player.getCards(), self.table.getCards());
-        bstr = self.eval.evaluate(self.bot.getCards(), self.table.getCards());
+    def _evaluate(self):
+        # Get the pot and cards on the board
+        pot = self.table.getPot();
+        board = sekf.table.getCards();
+        # Get the strengths of both players hands
+        pstr = self.eval.evaluate(self.player.getCards(), board);
+        bstr = self.eval.evaluate(self.bot.getCards(), board);
+        # Deal out the chips appropriately
         if pstr > bstr:
             self.player.addChips(pot);
         elif pstr < bstr:
@@ -69,47 +75,51 @@ class Game:
         # Store the current stage of the game
         stage = Constants.FLOP;
         # Stores the previous move
+        move = None;
 
         while stage != Constants.EVAL and stage != Constants.FOLD and stage != Constants.ALLIN:
             # Deal out the cards
             if stage == Constants.FLOP:
                 for i in range(0, 5):
+                    # Deal out the cards to the table
                     if i < 3:
                         self.table.addCard(self.table.draw());
-                    elif 3 <= i < 5:
+                    # Deal out the cards to the players
+                    else:
                         if self.dealer == Constants.PLAYER:
                             self.bot.addCard(self.table.draw());
                             self.player.addCard(self.table.draw());
                         else:
                             self.player.addCard(self.table.draw());
                             self.bot.addCard(self.table.draw());
-            elif stage == Constants.TURN or Constants.RIVER:
+            elif stage == Constants.TURN or stage == Constants.RIVER:
                 self.table.addCard(self.table.draw());
-
-            Card.print_pretty_cards(self.table.getCards());
             
             # Loop through the player moves
             for i in range(0, 2):
                 if turn == Constants.PLAYER:
                     move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
-                elif turn == Constants.BOT:
-                    move = self.bot.getMove();
+                else:
+                    move = self.bot.getMove(None);
 
                 # Deal with the most recent move
                 # If the move is allin or a fold, deal with it outside, they are special conditions
-                # Modifying data below, acquire lock and release when done
-                self.moveLock.acquire();
-                if move == Constants.ALLIN:
-                    stage = move;
-                    break;
-                elif move == Constants.FOLD:
-                    stage = move;
-                    break;
+                if move != Constants.ALLIN and move != Constants.FOLD:
+                    # We will be modifying data, need to lock here
+                    self.moveLock.acquire();
+                else:
+                    if move == Constants.ALLIN:
+                        stage = move;
+                        break;
+                    elif move == Constants.FOLD:
+                        stage = move;
+                        break;
+                    
                 # Otherwise, deal with the move here
-                elif move == Constants.CALL:
-                    if turn == self.Constants.PLAYER:
-                        self.player.subChips(self.table.getAnte()):
-                    elif turn == self.Constants.BOT:
+                if move == Constants.CALL:
+                    if turn == Constants.PLAYER:
+                        self.player.subChips(self.table.getAnte());
+                    else:
                         self.bot.subChips(self.table.getAnte());
                     self.table.addToPot(self.table.getAnte());
                     self.table.addToAnte(self.table.getAnte());
@@ -118,7 +128,7 @@ class Game:
                     if turn == Constants.PLAYER:
                         raiseAmt = self.player.getRaise();
                         self.player.subChips(self.table.getAnte() + raiseAmt);
-                    elif turn == Constants.BOT:
+                    else:
                         raiseAmt = self.bot.getRaise();
                         self.bot.subChips(self.table.getAnte() + raiseAmt);
                     self.table.addToPot(self.table.getAnte() + raiseAmt);
@@ -139,9 +149,12 @@ class Game:
 
         # Check for all paths
         if stage == Constants.EVAL:
-            self._evaluate(self.table.getPot());
+            self._evaluate();
         elif stage == Constants.FOLD:
-            print Constants.FOLD;
+            if turn == Constants.PLAYER:
+                self.bot.addChips(self.table.getPot());
+            else:
+                self.player.addChips(self.table.getPot());
         elif stage == Constants.ALLIN:
             print Constants.ALLIN;
 
