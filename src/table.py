@@ -27,7 +27,7 @@ class Table:
         self.pot += amt;
 
     def getAnte(self):
-        self.ante += amt;
+        return self.ante;
 
     def getPot(self):
         return self.pot;
