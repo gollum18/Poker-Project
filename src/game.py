@@ -34,7 +34,7 @@ class Game:
     def _evaluate(self):
         # Get the pot and cards on the board
         pot = self.table.getPot();
-        board = sekf.table.getCards();
+        board = self.table.getCards();
         # Get the strengths of both players hands
         pstr = self.eval.evaluate(self.player.getCards(), board);
         bstr = self.eval.evaluate(self.bot.getCards(), board);
@@ -155,8 +155,33 @@ class Game:
                 self.bot.addChips(self.table.getPot());
             else:
                 self.player.addChips(self.table.getPot());
+        # An all in is a bit more complex
         elif stage == Constants.ALLIN:
-            print Constants.ALLIN;
+            # Get the response from the opposing player
+            turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
+            if turn == Constants.PLAYER:
+                move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), Constants.ALLIN);
+            else:
+                move = self.bot.getMove(None);
+            # There was a call
+            if move == Constants.CALL:
+                # Take out the ante, or agents chips if taking ante would put the agent in the negative
+                if turn == Constants.PLAYER:
+                    self.table.addToPot(self.player.getChips() if self.player.getChips()-self.table.getAnte()<0 else self.table.getAnte());
+                    self.player.subChips(self.player.getChips() if self.player.getChips()-self.table.getAnte()<0 else self.table.getAnte());
+                else:
+                    self.table.addToPot(self.bot.getChips() if self.bot.getChips()-self.table.getAnte()<0 else self.table.getAnte());
+                    self.player.subChips(self.bot.getChips() if self.bot.getChips()-self.table.getAnte()<0 else self.table.getAnte());
+                # Deal out the remaining cards and evaluate
+                for i in range(0, 5-len(self.table.getCards())):
+                    self.table.addCard(self.deck.draw());
+                self._evaluate();
+            # There was a fold
+            else:
+                if turn == Constants.PLAYER:
+                    self.bot.addChips(self.table.getPot());
+                else:
+                    self.player.addChips(self.table.getPot());
 
         self.dealer = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
         self.player.empty();
