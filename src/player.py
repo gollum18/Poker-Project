@@ -31,7 +31,7 @@ class Player:
     def subChips(self, other):
         if type(other) is int:
             if self.chips - other < 0:
-                self.chips == 0;
+                self.chips = 0;
             else:
                 self.chips -= other;
 
