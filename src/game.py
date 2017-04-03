@@ -39,13 +39,18 @@ class Game:
         pstr = self.eval.evaluate(self.player.getCards(), board);
         bstr = self.eval.evaluate(self.bot.getCards(), board);
         # Deal out the chips appropriately
-        if pstr > bstr:
+        # I know this seems weird but hands in deuces are ranked starting at
+        # 1 with 1 being the best hand.
+        if pstr < bstr:
             self.player.addChips(pot);
-        elif pstr < bstr:
+            return Constants.PLAYER;
+        elif pstr > bstr:
             self.bot.addChips(pot);
+            return Constants.BOT;
         else:
             self.player.addChips(pot/2);
             self.bot.addChips(pot/2);
+            return "TIE";
 
     '''
     Determines whether the game is over.
@@ -76,6 +81,14 @@ class Game:
         stage = Constants.FLOP;
         # Stores the previous move
         move = None;
+        # Gets the winner
+        winner = None;
+
+        print("==========================================");
+        print("==========================================");
+        print("           BEGINNING ROUND #{0}           ".format(11-self.rounds));
+        print("==========================================");
+        print("==========================================");
 
         while stage != Constants.EVAL and stage != Constants.FOLD and stage != Constants.ALLIN:
             # Deal out the cards
@@ -101,6 +114,8 @@ class Game:
                     move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
                 else:
                     move = self.bot.getMove(None);
+
+                print("The {0}s' move was {1}.".format(turn, move));
 
                 # Deal with the most recent move
                 # If the move is allin or a fold, deal with it outside, they are special conditions
@@ -149,12 +164,14 @@ class Game:
 
         # Check for all paths
         if stage == Constants.EVAL:
-            self._evaluate();
+            print("The result was a {0} win!!!!".format(self._evaluate()));
         elif stage == Constants.FOLD:
             if turn == Constants.PLAYER:
                 self.bot.addChips(self.table.getPot());
+                winner = Constants.BOT;
             else:
                 self.player.addChips(self.table.getPot());
+                winner = Constants.PLAYER;
         # An all in is a bit more complex
         elif stage == Constants.ALLIN:
             # Get the response from the opposing player
@@ -174,17 +191,20 @@ class Game:
                     self.player.subChips(self.bot.getChips() if self.bot.getChips()-self.table.getAnte()<0 else self.table.getAnte());
                 # Deal out the remaining cards and evaluate
                 for i in range(0, 5-len(self.table.getCards())):
-                    self.table.addCard(self.deck.draw());
-                self._evaluate();
+                    self.table.addCard(self.table.draw());
+                print("The result was a {0} win!!!!".format(self._evaluate()));
             # There was a fold
             else:
                 if turn == Constants.PLAYER:
                     self.bot.addChips(self.table.getPot());
+                    winner = Constants.BOT;
                 else:
                     self.player.addChips(self.table.getPot());
+                    winner = Constants.PLAYER;
 
         self.dealer = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
         self.player.empty();
         self.bot.empty();
         self.table.reset();
+        self.rounds -=1;
         
