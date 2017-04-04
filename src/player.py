@@ -79,7 +79,7 @@ class Player:
         elif move == "r":
             return Constants.RAISE;
 
-    def getRaise(self):
+    def getBet(self):
         amt = -1;
         while amt < 0:
             try:
