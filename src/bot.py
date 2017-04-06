@@ -41,61 +41,14 @@ class Bot(Player):
         4.) The players aggression level.
         5.) The previous move.
         6.) The opponents cards.
+        7.) The current ante.
     '''
     def getMove(self, state):
         #TODO: IMPLEMENT ME TO BE NON-TRIVIAL
         # Maybe use feature based learning? I am actually leaning towards utilizing
         # outs alongside some kind of probabalistic model although this may prove too
         # difficult for the time remaining.
-        maxValue = -float("inf");
-        maxMove = None;
-        for move in self.getLegalMoves(state):
-            temp = self.monteCarlo(self.getNewState(state, move), Constants.PLAYER, 2);
-            if temp > maxValue:
-                maxValue = temp;
-                maxMove = move;
-        return move;
-
-    def getNewState(self, state, move):
-        # Have to copy everything inside the state as we do not want to change
-        #   the original variables passed into the starting state
-        return None;
-    '''
-    Performs monte carlo tree search to find the optimal solution.
-    '''
-    def monteCarlo(self, state, turn, depth):
-        # Check for termination conditions
-        # End of river
-        if turn == Constants.PLAYER and state[4] == Constants.FOLD:
-            return -self.chipsIn;
-        elif turn == Constants.BOT and state[4] == Constants.FOLD:
-            return state[2];
-
-        if depth == 0:
-            return util.handStrength(state[0], self.getHand(), state[1]) - util.handStrength(state[0], state[5], state[1]);
         
-        if len(state[1]) == 5:
-            # Then evaluate
-            diff = util.handStrength(state[0], self.getHand(), state[1]) - util.handStrength(state[0], state[5], state[1]);
-            if diff > 0:
-                return state[2];
-            elif diff < 0:
-                return -state[2];
-            else:
-                return 0;
-
-        p = 1.0/int(.33*len(state[1]));
-        if turn == Constants.PLAYER:
-            value = 0;
-            for move in self.getLegalMoves(state):
-                value += p * self.monteCarlo(self.getNewState(state, move), Constants.BOT, depth);
-            return value;
-        else:
-            value = 0;
-            for move in self.getLegalMoves(state):
-                value += p * self.monteCarlo(self.getNewState(state, move), Constants.PLAYER, depth - 1);
-            return value;
-
     def shift(self, won):
         if won:
             if self.confidence < 2:
