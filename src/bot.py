@@ -1,5 +1,6 @@
 from player import Player
 from constants import Constants
+from deuces import Card
 import random
 import util
 
@@ -13,32 +14,48 @@ class Bot(Player):
     '''
     def __init__(self, chips):
         Player.__init__(self, chips);
-        # Stores the chips that the player currently has in the pot
-        #   gets reset at the end of the round
         self.chipsIn = 0;
-        # The predictor is used to model confidence in our AI
-        self.predictor = 0;
+        self.aggression = 0.0;
+        self.confidence = random.randint(-2, 2);
 
-    # Shifts the predictor up or down
-    def shift(self, shift):
-        if shift == Constants.SHIFT_LEFT:
-            if self.predictor > Constants.LOWER_PREDICTOR:
-                self.predictor -=1;
-        elif shift == Constants.SHIFT_RIGHT:
-            if self.predictor < Constants.UPPER_PREDICTOR:
-                self.predictor += 1;
+    def addToChipsIn(self, amt):
+        if amt <= 0:
+            return;
+        self.chipsIn += amt;
+
+    '''
+    Overrides the parent method to empty the chips in on round reset.
+    '''
+    def empty(self):
+        # Calls the parent method to clear the hand
+        Player.empty(self);
+        # In addition empty chips in for next round
+        self.chipsIn = 0;
 
     '''
     Gets the bots move.
+    The gamestate should contain just the following in this order:
+        1.) The evaluator used by the client.
+        2.) The cards on the board.
+        3.) The current pot.
+        4.) The players aggression level.
+        5.) The previous move.
+        6.) The opponents cards.
     '''
-    def getMove(self, state, prevMove):
+    def getMove(self, state):
         #TODO: IMPLEMENT ME TO BE NON-TRIVIAL
         # Maybe use feature based learning? I am actually leaning towards utilizing
         # outs alongside some kind of probabalistic model although this may prove too
-        # difficult for the time remaining
-        if prevMove == Constants.ALLIN:
-            return random.choice([Constants.CALL, Constants.FOLD]);
-        return random.choice([Constants.ALLIN, Constants.RAISE, Constants.CALL, Constants.FOLD]);
+        # difficult for the time remaining.
+        return random.choice(self.getLegalMoves(state));
+
+    def shift(self, won):
+        if won:
+            if self.confidence < 2:
+                self.confidence += 1;
+        else:
+            if self.confidence > -2:
+                self.confidence -= 1;
 
     '''
     This algorithm is a modified version of the getBetAmt algorithm found in
@@ -70,32 +87,23 @@ class Bot(Player):
             else:
                 percentile = Constants.HIPOINT + (random.randint(30, 70)/100.0);
 
-        finalBet = percentile * maxBet;
+        finalBet = int(percentile * maxBet);
         if finalBet < minBet:
             finalBet = minBet;
         elif finalBet > maxBet:
             finalBet = maxBet;
 
-        return int(finalBet);
+        return finalBet;
 
     '''
     Gets the bots betting type.
-    The state here should just consist of these items in this order:
-        1.) The current cards on the board.
-        2.) The evaluator used by the board.
     This algorithm is a modified version of the getBetAmt algorithm found in
     'ALGORITHMS FOR EVOLVING NO-LIMIT TEXAS HOLD'EM POKER PLAYING AGENTS' by
     Garret Nicolai and Robert Hilderman.
     '''
     def getBetType(self, state):
-        # Determine the hand stength using deuces.
-        # Subtract off 1 as highest rank in deuces is 1
-        # This should effectively model raising in real life
-        norm = state[1].evaluate(self.getCards(), state[0])-1;
-        # Flip it so we can normalize it
-        norm = Constants.LOWESTRANK - norm;
-        # Normalize the percentage
-        norm = float(norm/Constants.LOWESTRANK);
+        # Get the normalized hand strength percentage
+        norm = util.handStrength(state[1], self.getCards(), state[0]);
 
         # Get the overall raise type, this is predetermined and non-adjustable by the AI
         # Return a small bet if we are not very confident.
@@ -115,7 +123,12 @@ class Bot(Player):
             raise ValueError("Raise type percentage exceeded normal bounds! Must be between 0 <= x <= 1.");
 
     '''
-    Resets certain round dependent features for the bot.
+    Gets the bots legal moves based on the bots confidence level.
     '''
-    def reset(self):
-        self.chipsIn = 0;
+    def getLegalMoves(self, state):
+        if state[4] == Constants.ALLIN:
+            return [Constants.CALL, Constants.FOLD];
+        if util.flipCoin(self.confidence):
+            return [Constants.CALL, Constants.FOLD];
+        else:
+            return [Constants.CALL, Constants.RAISE, Constants.ALLIN, Constants.FOLD];
