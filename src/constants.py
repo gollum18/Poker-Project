@@ -32,10 +32,10 @@ class Constants:
     LOWESTRANK = 7462;
 
     # Constants needed by the bot
-    WEIGHTS_FILE = "weights.me";
-    WEIGHTS = ["HRANK", "MYAGGRO", "OPPAGGRO", "CP-RATIO"];
-    LOWER_PREDICTOR = -2;
-    UPPER_PREDICTOR = 2;
-    SHIFT_LEFT = "LEFT";
-    SHIFT_RIGHT = "RIGHT";
+    CONFIDENCE = {-2:.5, -1:.6, 0:.75, 1:.9, 2:1};
+    HRANK = "HRANK";
+    MYAGGRO = "MYAGGRO";
+    OPPAGGRO = "OPPAGGRO";
+    CPRATIO = "CPRATIO";
+    DEFAULT = 1.0;
     MIN_BET = 5;

@@ -12,6 +12,7 @@ class Player:
     def __init__(self, chips):
         self.chips = chips;
         self.cards = [];
+        self.aggression = 1.0;
 
     '''
     Adds a card to the players hand
@@ -40,6 +41,7 @@ class Player:
     '''
     def empty(self):
         del self.cards[:];
+        self.aggression = 1.0;
 
     '''
     Get the players hand.
@@ -87,3 +89,9 @@ class Player:
             except ValueError:
                 print("Must input a valid amount!");
         return amt;
+
+    def getAggression(self):
+        return self.aggression;
+
+    def setAggression(self, amt, ante):
+        self.aggression = float(amt/ante);
