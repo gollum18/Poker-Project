@@ -4,6 +4,7 @@ class Constants:
     TURN = "TURN";
     RIVER = "RIVER";
     EVAL = "EVAL";
+    TERMINAL = "TERMINAL STATE";
 
     # Represents players and eval status
     PLAYER = "PLAYER";
@@ -32,10 +33,6 @@ class Constants:
     LOWESTRANK = 7462;
 
     # Constants needed by the bot
-    CONFIDENCE = {-2:.5, -1:.6, 0:.75, 1:.9, 2:1};
-    HRANK = "HRANK";
-    MYAGGRO = "MYAGGRO";
-    OPPAGGRO = "OPPAGGRO";
-    CPRATIO = "CPRATIO";
+    WEIGHTS = ["HRANK", "MYAGGRO", "OPPAGGRO", "CPRATIO"];
     DEFAULT = 1.0;
     MIN_BET = 5;

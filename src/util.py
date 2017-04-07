@@ -2,12 +2,14 @@ from random import random;
 from random import randint;
 from constants import Constants
 from deuces import Card
+from deuces import Evaluator
+from __future__ import division
 
 '''
 Determines the hand strength using the given evaluator, hand, and the cards
 on the table. Will always be a decimal percentage from 0 to 1.
 '''
-def handStrength(evaluator, hand, cardsOnTable):
+def strength(evaluator, hand, cardsOnTable):
     # Determine the hand stength using deuces.
     # Subtract off 1 as highest rank in deuces is 1
     # This should effectively model raising in real life
@@ -15,15 +17,16 @@ def handStrength(evaluator, hand, cardsOnTable):
     # Flip it so we can normalize it
     norm = Constants.LOWESTRANK - norm;
     # Normalize the percentage
-    norm = float(norm/Constants.LOWESTRANK);
+    norm = norm/Constants.LOWESTRANK;
     # Return it
     return norm;
+
 
 '''
 Determines the chipsIn ratio for us.
 '''
 def chipRatio(chipsIn, pot):
-    return float(chipsIn/pot);
+    return chipsIn/pot;
 
 '''
 Simulates noise in the environment. For our purposes, this will pair with the bots confidence
@@ -56,14 +59,5 @@ def buildDeck(cards):
         for suit in 'shdc':
             if value+suit not in cards:
                 deck.append(Card.new(value+suit));
+    deck = shuffleDeck(deck);
     return deck;
-
-'''
-Generates a random sampling of the search space monte-carlo style.
-This deck is a randomly selected subset of the original deck
-'''
-def generateMonteCarloDeck(cards, amt):
-    deck = buildDeck(cards);
-    for i in range(amt):
-        deck.pop(randint(0, len(deck)-1));
-    return shuffleDeck(deck);
