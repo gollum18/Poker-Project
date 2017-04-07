@@ -12,6 +12,8 @@ class Player:
     def __init__(self, chips):
         self.chips = chips;
         self.cards = [];
+        self.chipsIn = 0;
+        self.chipRatio = 0.0;
         self.aggression = 1.0;
 
     '''
@@ -25,6 +27,15 @@ class Player:
     '''
     def addChips(self, chips):
         self.chips += chips;
+
+
+    '''
+    Adds chips to the players in tracker.
+    '''
+    def addToChipsIn(self, amt):
+        if amt <= 0:
+            return;
+        self.chipsIn += amt;
 
     '''
     Subtracts chips from the chip count.
@@ -41,6 +52,7 @@ class Player:
     '''
     def empty(self):
         del self.cards[:];
+        self.chipsIn = 0;
         self.aggression = 1.0;
 
     '''

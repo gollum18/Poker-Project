@@ -5,6 +5,7 @@ from table import Table
 from random import choice
 from constants import Constants
 import threading
+import util
 
 '''
 Defines a poker game.
@@ -52,11 +53,9 @@ class Game:
         # 1 with 1 being the best hand.
         if pstr < bstr:
             self.player.addChips(pot);
-            self.bot.shift(False);
             return Constants.PLAYER;
         elif pstr > bstr:
             self.bot.addChips(pot);
-            self.bot.shift(True);
             return Constants.BOT;
         else:
             self.player.addChips(pot/2);
@@ -127,7 +126,7 @@ class Game:
                 if turn == Constants.PLAYER:
                     move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
                 else:
-                    move = self.bot.getMove((self.eval, self.table.getCards(), self.table.getPot(), self.player.getAggression(), move, self.player.getCards()));
+                    move = self.bot.getMove((self.eval, self.table.getCards(), self.table.getPot(), self.table.getAnte(), util.handStrength(self.eval, self.player.getCards(), self.table.getCards()), self.dealer, move));
 
                 print("The {0}s' move was {1}.".format(turn, move));
 
@@ -211,7 +210,7 @@ class Game:
             if turn == Constants.PLAYER:
                 move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
             else:
-                move = self.bot.getMove((self.eval, self.table.getCards(), self.table.getPot(), self.player.getAggression(), move, self.player.getCards()));
+                move = self.bot.getMove((self.eval, self.table.getCards(), self.table.getPot(), self.table.getAnte(), util.handStrength(self.eval, self.player.getCards(), self.table.getCards()), self.dealer, move));
             # There was a call
             if move == Constants.CALL:
                 # Take out the ante, or agents chips if taking ante would put the agent in the negative
@@ -232,10 +231,8 @@ class Game:
             else:
                 if turn == Constants.PLAYER:
                     self.bot.addChips(self.table.getPot());
-                    self.bot.shift(True);
                 else:
                     self.player.addChips(self.table.getPot());
-                    self.bot.shift(False);
 
         self.dealer = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
         self.player.empty();

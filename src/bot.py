@@ -1,61 +1,70 @@
 from player import Player
 from constants import Constants
 from deuces import Card
+from deuces import Evaluator
+from __future_ import division
+from collections import default_dict
 import random
 import util
 
 '''
 Defines a bot.
+A state is represented as: (community, move, dealer)
 '''
 class Bot(Player):
     
     '''
     Creates a bot by calling the parent constructor in the player class.
     '''
-    def __init__(self, chips):
+    def __init__(self, chips, discount, alpha):
         Player.__init__(self, chips);
-        self.chipsIn = 0;
-        self.aggression = 0.0;
-        self.confidence = random.randint(-2, 2);
+        self.discount = discount;
+        self.alpha = alpha;
+        self.values = default_dict(float);
+        self.eval = Evaluator();
 
-    def addToChipsIn(self, amt):
-        if amt <= 0:
-            return;
-        self.chipsIn += amt;
+    def disableTraining(self):
+        self.discount = 1.0;
+        self.alpha = 0.0
 
-    '''
-    Overrides the parent method to empty the chips in on round reset.
-    '''
-    def empty(self):
-        # Calls the parent method to clear the hand
-        Player.empty(self);
-        # In addition empty chips in for next round
-        self.chipsIn = 0;
+    def getSuccessorStates(self, state, action):
 
-    '''
-    Gets the bots move.
-    The gamestate should contain just the following in this order:
-        1.) The evaluator used by the client.
-        2.) The cards on the board.
-        3.) The current pot.
-        4.) The players aggression level.
-        5.) The previous move.
-        6.) The opponents cards.
-    '''
-    def getMove(self, state):
-        #TODO: IMPLEMENT ME TO BE NON-TRIVIAL
-        # Maybe use feature based learning? I am actually leaning towards utilizing
-        # outs alongside some kind of probabalistic model although this may prove too
-        # difficult for the time remaining.
-        return random.choice(self.getLegalMoves(state));
+    def getReward(self, state, successor):
 
-    def shift(self, won):
-        if won:
-            if self.confidence < 2:
-                self.confidence += 1;
-        else:
-            if self.confidence > -2:
-                self.confidence -= 1;
+    def computeQValueFromQValues(self, state):
+        actions = self.getLegalActions();
+        if not actions:
+            return 0.0;
+        maxValue = -float("inf");
+        for action in actions:
+            maxValue = max(maxValue, self.getQValue(state, action));
+        return maxValue;
+
+    def computeActionFromQValues(self, state):
+        actions = self.getLegalActions(state);
+        if not actions:
+            return None;
+        possibleMoves = default_dict(float);
+        for action in actions:
+            possibleMoves[action] = self.getQValue(state, action);
+        return max(possibleMoves, key=possibleMoves.get);
+
+    def getQValue(self, state, action):
+        if (state, action) not in self.values:
+            return 0.0;
+        return self.values[(, action)];
+
+    def getPolicy(self, state):
+        return self.ComputeActionFromQValues(state);
+
+    def update(self, state, action, successor, reward):
+        sample = reward + self.discount*self.getValue(successor);
+        self.values[(state, action)] = ((1-self.alpha)*self.getQValue(state, action))+(self.alpha*sample);
+
+    def getLegalActions(self, state):
+        if state[1] == Constants.ALLIN:
+            return [Constants.CALL, Constants.FOLD];
+        return [Constants.CALL, Constants.ALLIN, Constants.FOLD, Constants.RAISE];
 
     '''
     This algorithm is a modified version of the getBetAmt algorithm found in
@@ -103,7 +112,7 @@ class Bot(Player):
     '''
     def getBetType(self, state):
         # Get the normalized hand strength percentage
-        norm = util.handStrength(state[1], self.getCards(), state[0]);
+        norm = util.strength(self.eval, self.getCards(), state[0]);
 
         # Get the overall raise type, this is predetermined and non-adjustable by the AI
         # Return a small bet if we are not very confident.
@@ -121,14 +130,3 @@ class Bot(Player):
         # Raise a value error if we have exceeded normal probabilistic bounds
         else:
             raise ValueError("Raise type percentage exceeded normal bounds! Must be between 0 <= x <= 1.");
-
-    '''
-    Gets the bots legal moves based on the bots confidence level.
-    '''
-    def getLegalMoves(self, state):
-        if state[4] == Constants.ALLIN:
-            return [Constants.CALL, Constants.FOLD];
-        if util.flipCoin(self.confidence):
-            return [Constants.CALL, Constants.FOLD];
-        else:
-            return [Constants.CALL, Constants.RAISE, Constants.ALLIN, Constants.FOLD];
