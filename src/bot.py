@@ -1,35 +1,32 @@
+from __future__ import division
 from player import Player
 from constants import Constants
 from deuces import Card
 from deuces import Evaluator
-from __future_ import division
-from collections import default_dict
+from collections import defaultdict
+from copy import deepcopy
 import random
 import util
 
 '''
 Defines a bot.
-A state is represented as: (community, move, dealer)
+
 '''
 class Bot(Player):
     
     '''
     Creates a bot by calling the parent constructor in the player class.
     '''
-    def __init__(self, chips, discount, alpha):
+    def __init__(self, chips, alpha, gamma):
         Player.__init__(self, chips);
-        self.discount = discount;
+        self.gamma = gamma;
         self.alpha = alpha;
-        self.values = default_dict(float);
+        self.values = defaultdict(float);
         self.eval = Evaluator();
 
     def disableTraining(self):
-        self.discount = 1.0;
+        self.gamma = 1.0;
         self.alpha = 0.0
-
-    def getSuccessorStates(self, state, action):
-
-    def getReward(self, state, successor):
 
     def computeQValueFromQValues(self, state):
         actions = self.getLegalActions();
@@ -37,35 +34,77 @@ class Bot(Player):
             return 0.0;
         maxValue = -float("inf");
         for action in actions:
-            maxValue = max(maxValue, self.getQValue(state, action));
+            maxValue = max(maxValue, self.getQValue(set(state[0], state[1]), action));
         return maxValue;
 
     def computeActionFromQValues(self, state):
         actions = self.getLegalActions(state);
         if not actions:
             return None;
-        possibleMoves = default_dict(float);
+        possibleMoves = defaultdict(float);
         for action in actions:
-            possibleMoves[action] = self.getQValue(state, action);
+            possibleMoves[action] = self.getQValue(frozenset(state[0]+state[1]), action);
         return max(possibleMoves, key=possibleMoves.get);
 
     def getQValue(self, state, action):
         if (state, action) not in self.values:
             return 0.0;
-        return self.values[(, action)];
+        return self.values[(frozenset(state[0]+state[1]), action)];
 
-    def getPolicy(self, state):
-        return self.ComputeActionFromQValues(state);
-
+    def getMove(self, state):
+        return self.computeActionFromQValues(state);
+    
     def update(self, state, action, successor, reward):
-        sample = reward + self.discount*self.getValue(successor);
+        state = frozenset(state(0)+state[1]);
+        sample = reward + self.gamma*self.getValue(successor);
         self.values[(state, action)] = ((1-self.alpha)*self.getQValue(state, action))+(self.alpha*sample);
 
     def getLegalActions(self, state):
-        if state[1] == Constants.ALLIN:
+        if state[5] == Constants.TERMINAL:
+            return None;
+        if state[5] == Constants.ALLIN:
             return [Constants.CALL, Constants.FOLD];
         return [Constants.CALL, Constants.ALLIN, Constants.FOLD, Constants.RAISE];
 
+## May or may not be needed, this is a way to generate successor states
+##    '''
+##    A state is represented as:
+##        (community, hand, pot, ante, aggression, previousMove, dealer, chipsIn)
+##    '''
+##    def getSuccessorStates(self, state)
+##        states = [];
+##        for action in self.getLegalActions(state):
+##            # Check who the dealer is
+##            # If the dealer is the player, then the bot bets first
+##            if state[6] == Constants.PLAYER:
+##                if action == Constants.ALLIN:
+##                    states.append(state[0], state[1], state[2]+self.getChips(), state[3]+self.getChips(), self.getChips()/state[3], Constants.ALLIN, state[6], self.getChipsIn()+self.getChips()); 
+##                elif action == Constants.CALL:
+##                    states.append(state[0], state[1], state[2]+state[3], state[3]*2, 1.0, Constants.CALL, state[6], state[3]+state[7]);
+##                elif action == Constants.FOLD:
+##                    states.append(state[0], state[1], state[2], state[3], state[4], Constants.TERMINAL, state[6], state[7]);
+##                elif action == Constants.RAISE:
+##                    amt = self.getBet(state[3], self.getBetType(state[1], state[0]));
+##                    states.append(state[0], state[1], state[2]+amt, state[3]+amt, amt/state[3], Constants.RAISE, state[6], state[7]+amt);
+##            # Otherwise the bot bets second in this round
+##            else:
+##                # Build a deck for each card
+##                for card in util.buildDeck(state[0]+state[1]):
+##                    # Copy everythong that needs copied
+##                    comm = deepcopy(state[0]);
+##                    comm.append(card);
+##                    # Account for the appropriate action
+##                    if action == Constants.ALLIN:
+##                        states.append(comm, state[1], state[2]+self.getChips(), state[3]+self.getChips(), self.getChips()/state[3], Constants.ALLIN, state[6], self.getChipsIn()+self.getChips()); 
+##                    elif action == Constants.CALL:
+##                        states.append(comm, state[1], state[2]+state[3], state[3]*2, 1.0, Constants.CALL, state[6], state[3]+state[7]);
+##                    elif action == Constants.FOLD:
+##                        states.append(comm, state[1], state[2], state[3], state[4], Constants.TERMINAL, state[6], state[7]);
+##                    elif actions == Constants.RAISE:
+##                        amt = self.getBet(state[3], self.getBetType(state[1], comm));
+##                        states.append(comm, state[1], state[2]+amt, state[3]+amt, amt/state[3], Constants.RAISE, state[6], state[7]+amt);
+##        return states;
+                
     '''
     This algorithm is a modified version of the getBetAmt algorithm found in
     'ALGORITHMS FOR EVOLVING NO-LIMIT TEXAS HOLD'EM POKER PLAYING AGENTS' by
@@ -110,9 +149,9 @@ class Bot(Player):
     'ALGORITHMS FOR EVOLVING NO-LIMIT TEXAS HOLD'EM POKER PLAYING AGENTS' by
     Garret Nicolai and Robert Hilderman.
     '''
-    def getBetType(self, state):
+    def getBetType(self, hand, comm):
         # Get the normalized hand strength percentage
-        norm = util.strength(self.eval, self.getCards(), state[0]);
+        norm = util.strength(self.eval, hand, comm);
 
         # Get the overall raise type, this is predetermined and non-adjustable by the AI
         # Return a small bet if we are not very confident.
