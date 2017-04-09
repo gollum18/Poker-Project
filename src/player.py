@@ -1,3 +1,4 @@
+from __future__ import division
 from deuces import Card
 from constants import Constants
 
@@ -55,6 +56,9 @@ class Player:
         self.chipsIn = 0;
         self.aggression = 1.0;
 
+    def getChipsIn(self):
+        return self.chipsIn;
+
     '''
     Get the players hand.
     '''
@@ -106,4 +110,4 @@ class Player:
         return self.aggression;
 
     def setAggression(self, amt, ante):
-        self.aggression = float(amt/ante);
+        self.aggression = amt/ante;

@@ -16,11 +16,11 @@ class Game:
     Create a poker game.
     Takes a number of rounds and an amount of starting chips.
     '''
-    def __init__(self, rounds, chips, big, little):
+    def __init__(self, rounds = 10, chips = 1000, big = 50, little = 25, alpha = 0.5, gamma = 0.8):
         # Variables
         self.rounds = rounds;
         self.player = Player(chips);
-        self.bot = Bot(chips);
+        self.bot = Bot(chips, alpha, gamma);
         self.big = big;
         self.little = little;
         self.minBet = .25 * little;
@@ -61,6 +61,20 @@ class Game:
             self.player.addChips(pot/2);
             self.bot.addChips(pot/2);
             return "TIE";
+
+    '''
+    Gets the reward for transitioning from one state to the next given a specific
+    action.
+    Rewards are as follows:
+        For any actions that continue the game it is always the
+            (amt bet * aggression) / probability of losing
+        For a fold it is always (ante / probability of winning) - chips already in
+    '''
+    def _getReward(self, state, action, nextState):
+        if action == Constants.FOLD:
+            return (nextState[3]/util.strength(self.eval,nextState[1],nextState[0]))-nextState[7]
+        else:
+            return ((nextState[2]-state[2])*nextState[4])/(1-util.strength(self.eval,nextState[1],nextState[0]))
 
     '''
     Determines whether the game is over.
@@ -120,14 +134,15 @@ class Game:
                             self.bot.addCard(self.table.draw());
             elif stage == Constants.TURN or stage == Constants.RIVER:
                 self.table.addCard(self.table.draw());
+
+            state = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
             
             # Loop through the player moves
             for i in range(0, 2):
                 if turn == Constants.PLAYER:
                     move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
                 else:
-                    move = self.bot.getMove((self.eval, self.table.getCards(), self.table.getPot(), self.table.getAnte(), util.handStrength(self.eval, self.player.getCards(), self.table.getCards()), self.dealer, move));
-
+                    move = self.bot.getMove(state);
                 print("The {0}s' move was {1}.".format(turn, move));
 
                 # Deal with the most recent move
@@ -169,6 +184,11 @@ class Game:
                     self.table.addToAnte(raiseAmt);
                 # Release the movelock
                 self.moveLock.release();
+
+                # Call update in order to update the bots q-table
+                if turn == Constants.BOT:
+                    successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
+                    self.bot.update(state, move, successor, self._getReward(state, move, successor));
                 
                 # Switch turns    
                 turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
@@ -187,10 +207,8 @@ class Game:
         elif stage == Constants.FOLD:
             if turn == Constants.PLAYER:
                 self.bot.addChips(self.table.getPot());
-                self.bot.shift(True);
             else:
                 self.player.addChips(self.table.getPot());
-                self.bot.shift(False);
         # An all in is a bit more complex
         elif stage == Constants.ALLIN:
             # Take out the chips for the allin player

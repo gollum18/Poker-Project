@@ -1,9 +1,9 @@
+from __future__ import division
 from random import random;
 from random import randint;
 from constants import Constants
 from deuces import Card
 from deuces import Evaluator
-from __future__ import division
 
 '''
 Determines the hand strength using the given evaluator, hand, and the cards
