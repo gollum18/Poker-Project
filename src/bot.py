@@ -28,23 +28,32 @@ class Bot(Player):
         self.gamma = 1.0;
         self.alpha = 0.0
 
-    def computeQValueFromQValues(self, state):
-        actions = self.getLegalActions();
+    def computeValueFromQValues(self, state):
+        actions = self.getLegalActions(state);
         if not actions:
             return 0.0;
         maxValue = -float("inf");
         for action in actions:
-            maxValue = max(maxValue, self.getQValue(set(state[0], state[1]), action));
+            maxValue = max(maxValue, self.getQValue(frozenset(state[0]+state[1]), action));
         return maxValue;
 
     def computeActionFromQValues(self, state):
+        # Get the legal actions
         actions = self.getLegalActions(state);
         if not actions:
             return None;
+        # Get all possible moves from this state
         possibleMoves = defaultdict(float);
         for action in actions:
             possibleMoves[action] = self.getQValue(frozenset(state[0]+state[1]), action);
-        return max(possibleMoves, key=possibleMoves.get);
+        # Get the maximum value from the moves dictionary
+        maxValue = possibleMoves[max(possibleMoves)];
+        finalMoves = [];
+        for move, value in possibleMoves.iteritems():
+            if value == maxValue:
+                finalMoves.append(move);
+        # Arbitrarily pick a maximum move at random
+        return random.choice(finalMoves);
 
     def getQValue(self, state, action):
         if (state, action) not in self.values:
@@ -53,9 +62,12 @@ class Bot(Player):
 
     def getMove(self, state):
         return self.computeActionFromQValues(state);
+
+    def getValue(self, state):
+        return self.computeValueFromQValues(state);
     
     def update(self, state, action, successor, reward):
-        state = frozenset(state(0)+state[1]);
+        state = frozenset(state[0]+state[1]);
         sample = reward + self.gamma*self.getValue(successor);
         self.values[(state, action)] = ((1-self.alpha)*self.getQValue(state, action))+(self.alpha*sample);
 
