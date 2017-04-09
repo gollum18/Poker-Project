@@ -228,18 +228,19 @@ class Game:
             if turn == Constants.PLAYER:
                 move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
             else:
-                move = self.bot.getMove((self.eval, self.table.getCards(), self.table.getPot(), self.table.getAnte(), util.handStrength(self.eval, self.player.getCards(), self.table.getCards()), self.dealer, move));
+                move = self.bot.getMove((self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn()));
             # There was a call
             if move == Constants.CALL:
                 # Take out the ante, or agents chips if taking ante would put the agent in the negative
                 if turn == Constants.PLAYER:
                     self.table.addToPot(self.player.getChips());
+                    self.player.addToChipsIn(self.table.getAnte());
                     self.player.setAggression(self.table.getAnte(), self.table.getAnte());
                     self.player.subChips(self.table.getAnte());
                 else:
                     self.table.addToPot(self.bot.getChips());
                     self.bot.addToChipsIn(self.table.getAnte());
-                    self.player.setAggression(self.table.getAnte(), self.table.getAnte());
+                    self.bot.setAggression(self.table.getAnte(), self.table.getAnte());
                     self.bot.subChips(self.table.getAnte());
                 # Deal out the remaining cards and evaluate
                 for i in range(0, 5-len(self.table.getCards())):
@@ -251,6 +252,9 @@ class Game:
                     self.bot.addChips(self.table.getPot());
                 else:
                     self.player.addChips(self.table.getPot());
+            if turn == Constants.BOT:
+                successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
+                self.bot.update(state, move, successor, self._getReward(state, move, successor));
 
         self.dealer = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
         self.player.empty();
