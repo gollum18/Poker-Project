@@ -1,6 +1,7 @@
 from __future__ import division
 from deuces import Card
 from constants import Constants
+import util
 
 '''
 Defines a player.
@@ -76,9 +77,9 @@ class Player:
     '''
     def getMove(self, cardsOnTable, pot, ante, prevMove):
         print("These Cards are on the Table:");
-        Card.print_pretty_cards(cardsOnTable);
+        util.printCards(cardsOnTable);
         print("Your Cards Are:");
-        Card.print_pretty_cards(self.cards);
+        util.printCards(self.cards);
         print("You have ${0}, Pot is ${1}, Ante is ${2}.".format(self.chips, pot, ante));
 
         move = "";

@@ -6,6 +6,18 @@ from deuces import Card
 from collections import defaultdict
 
 '''
+Prints out cards to the terminal.
+'''
+def printCards(cards):
+    outStr = "[ ";
+    for i in range(0, len(cards)):
+        outStr += "{0}".format(Card.int_to_str(cards[i]));
+        if i != len(cards)-1:
+            outStr += ", ";
+    outStr += " ]";
+    print outStr;
+
+'''
 Writes the q-learning dictionary to file, overwriting what was in there.
 '''
 def writeTable(qtable):
