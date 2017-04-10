@@ -21,6 +21,12 @@ def strength(evaluator, hand, cardsOnTable):
     # Return it
     return norm;
 
+'''
+Gets the first half of the key for the q-learning dictionary.
+Uniquely identifies a hand/community combination.
+'''
+def getKey(cards):
+    return sum(cards);
 
 '''
 Determines the chipsIn ratio for us.
