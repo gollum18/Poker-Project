@@ -31,7 +31,7 @@ class Constants:
     HIPOINT = .3;
     HIABOVE = .95;
     LOWESTRANK = 7462;
-    FILENAME = "qtable.txt"
+    FILENAME = "qtable.table"
 
     # Constants needed by the bot
     WEIGHTS = ["HRANK", "MYAGGRO", "OPPAGGRO", "CPRATIO"];
