@@ -3,7 +3,6 @@ from random import random;
 from random import randint;
 from constants import Constants
 from deuces import Card
-from deuces import Evaluator
 from collections import defaultdict
 
 '''
@@ -27,6 +26,7 @@ def readTable():
         split = line.split();
         qtable[(int(split[0]), split[1])] = float(split[2]);
     return qtable;
+
 '''
 Determines the hand strength using the given evaluator, hand, and the cards
 on the table. Will always be a decimal percentage from 0 to 1.

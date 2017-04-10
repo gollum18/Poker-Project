@@ -9,10 +9,10 @@ import os.path
 import random
 import util
 
-_false = True;
-
 '''
 Defines a bot.
+A state is represented as:
+    (community, hand, pot, ante, aggression, previousMove, dealer, chipsIn)
 '''
 class Bot(Player):
     
@@ -70,8 +70,6 @@ class Bot(Player):
         return self.values[(state, action)];
 
     def getMove(self, state):
-        if _debug:
-            print self.values;
         return self.computeActionFromQValues(state);
 
     def getValue(self, state):
