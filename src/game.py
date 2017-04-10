@@ -72,7 +72,7 @@ class Game:
     '''
     def _getReward(self, state, action, nextState):
         if action == Constants.RAISE or action == Constants.ALLIN:
-            return nextState[2]*util.strength(self.eval,nextState[1],nextState[0])-nextState[7];
+            return nextState[2]*util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0])[Constants.BOT]-nextState[7];
         elif action == Constants.CALL:
             return -nextState[3];
         return -nextState[7];

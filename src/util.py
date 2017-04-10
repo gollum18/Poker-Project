@@ -28,19 +28,29 @@ def readTable():
     return qtable;
 
 '''
-Determines the hand strength using the given evaluator, hand, and the cards
-on the table. Will always be a decimal percentage from 0 to 1.
+Gets the winning percentages of each player.
+Will return a dictionary that maps each player to their winning percentage: 0-1.
 '''
-def strength(evaluator, hand, cardsOnTable):
+def winningPercentage(evaluator, phand, ahand, cardsOnTable):
+    percentile = defaultdict(float);
     # Determine the hand stength using deuces.
     # Subtract off 1 as highest rank in deuces is 1
     # This should effectively model raising in real life
-    norm = evaluator.evaluate(hand, cardsOnTable)-1;
-    # Flip it so we can normalize it
-    norm = Constants.LOWESTRANK - norm;
-    # Normalize the percentage
-    norm = norm/Constants.LOWESTRANK;
+    player = Constants.LOWESTRANK-(evaluator.evaluate(phand, cardsOnTable)-1);
+    agent = Constants.LOWESTRANK-(evaluator.evaluate(ahand, cardsOnTable)-1);
+    total = player+agent;
+    percentile[Constants.PLAYER]=player/total;
+    percentile[Constants.BOT]=agent/total;
     # Return it
+    return percentile;
+
+'''
+Gets the hand strength of a single player.
+Returns a float representing the hand strength of the player: 0-1.
+'''
+def strength(evaluator, hand, cardsOnTable):
+    norm = Constants.LOWESTRANK-(evaluator.evaluate(hand, cardsOnTable)-1);
+    norm = norm/Constants.LOWESTRANK;
     return norm;
 
 '''
