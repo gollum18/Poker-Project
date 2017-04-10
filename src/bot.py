@@ -8,9 +8,10 @@ from copy import deepcopy
 import random
 import util
 
+_debug = True;
+
 '''
 Defines a bot.
-
 '''
 class Bot(Player):
     
@@ -34,7 +35,7 @@ class Bot(Player):
             return 0.0;
         maxValue = -float("inf");
         for action in actions:
-            maxValue = max(maxValue, self.getQValue(frozenset(state[0]+state[1]), action));
+            maxValue = max(maxValue, self.getQValue(util.getKey(state[0]+state[1]), action));
         return maxValue;
 
     def computeActionFromQValues(self, state):
@@ -45,7 +46,7 @@ class Bot(Player):
         # Get all possible moves from this state
         possibleMoves = defaultdict(float);
         for action in actions:
-            possibleMoves[action] = self.getQValue(frozenset(state[0]+state[1]), action);
+            possibleMoves[action] = self.getQValue(util.getKey(state[0]+state[1]), action);
         # Get the maximum value from the moves dictionary
         maxValue = possibleMoves[max(possibleMoves)];
         finalMoves = [];
@@ -58,16 +59,18 @@ class Bot(Player):
     def getQValue(self, state, action):
         if (state, action) not in self.values:
             return 0.0;
-        return self.values[(frozenset(state[0]+state[1]), action)];
+        return self.values[(state, action)];
 
     def getMove(self, state):
+        if _debug:
+            print self.values;
         return self.computeActionFromQValues(state);
 
     def getValue(self, state):
         return self.computeValueFromQValues(state);
     
     def update(self, state, action, successor, reward):
-        state = frozenset(state[0]+state[1]);
+        state = util.getKey(state[0]+state[1]);
         sample = reward + self.gamma*self.getValue(successor);
         self.values[(state, action)] = ((1-self.alpha)*self.getQValue(state, action))+(self.alpha*sample);
 
