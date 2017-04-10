@@ -4,7 +4,29 @@ from random import randint;
 from constants import Constants
 from deuces import Card
 from deuces import Evaluator
+from collections import defaultdict
 
+'''
+Writes the q-learning dictionary to file, overwriting what was in there.
+'''
+def writeTable(qtable):
+    outFile = open(Constants.FILENAME, 'w');
+    for key, value in qtable.iteritems():
+        outFile.write("{0} {1} {2}\n".format(key[0], key[1], value));
+    outFile.close();
+
+'''
+Loads in the q-learning dictionary from file.
+'''
+def readTable():
+    inFile = open(Constants.FILENAME, 'r');
+    lines = [line.rstrip('\n') for line in inFile];
+    inFile.close();
+    qtable = defaultdict(float);
+    for line in lines:
+        split = line.split();
+        qtable[(int(split[0]), split[1])] = float(split[2]);
+    return qtable;
 '''
 Determines the hand strength using the given evaluator, hand, and the cards
 on the table. Will always be a decimal percentage from 0 to 1.

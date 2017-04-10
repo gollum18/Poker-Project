@@ -89,6 +89,9 @@ class Game:
         elif self.bot.getChips() == 0:
             return True;
         return False;
+
+    def cleanup(self):
+        self.bot.writeTable();
     
     '''
     Plays a round.

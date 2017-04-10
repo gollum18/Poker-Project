@@ -5,10 +5,11 @@ from deuces import Card
 from deuces import Evaluator
 from collections import defaultdict
 from copy import deepcopy
+import os.path
 import random
 import util
 
-_debug = True;
+_false = True;
 
 '''
 Defines a bot.
@@ -22,8 +23,15 @@ class Bot(Player):
         Player.__init__(self, chips);
         self.gamma = gamma;
         self.alpha = alpha;
-        self.values = defaultdict(float);
+        # Read in the table if it exists, otherwise create a new one
+        if os.path.exists(Constants.FILENAME):
+            self.values = util.readTable();
+        else:
+            self.values = defaultdict(float);
         self.eval = Evaluator();
+
+    def writeTable(self):
+        util.writeTable(self.values);
 
     def disableTraining(self):
         self.gamma = 1.0;
