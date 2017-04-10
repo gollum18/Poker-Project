@@ -66,15 +66,16 @@ class Game:
     Gets the reward for transitioning from one state to the next given a specific
     action.
     Rewards are as follows:
-        For any actions that continue the game it is always the
-            (amt bet * aggression) / probability of losing
-        For a fold it is always (ante / probability of winning) - chips already in
+        A Fold returns -chipsIn
+        A Call returns -ante
+        A Raise or Allin returns pot*P(winning)-chipsIn
     '''
     def _getReward(self, state, action, nextState):
-        if action == Constants.FOLD:
-            return (nextState[3]/util.strength(self.eval,nextState[1],nextState[0]))-nextState[7]
-        else:
-            return ((nextState[2]-state[2])*nextState[4])/(1-util.strength(self.eval,nextState[1],nextState[0]))
+        if action == Constants.RAISE or action == Constants.ALLIN:
+            return nextState[2]*util.strength(self.eval,nextState[1],nextState[0])-nextState[7];
+        elif action == Constants.CALL:
+            return -nextState[3];
+        return -nextState[7];
 
     '''
     Determines whether the game is over.
@@ -89,6 +90,9 @@ class Game:
         elif self.bot.getChips() == 0:
             return True;
         return False;
+
+    def cleanup(self):
+        self.bot.writeTable();
     
     '''
     Plays a round.

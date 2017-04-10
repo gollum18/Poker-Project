@@ -5,13 +5,14 @@ from deuces import Card
 from deuces import Evaluator
 from collections import defaultdict
 from copy import deepcopy
+import os.path
 import random
 import util
 
-_debug = True;
-
 '''
 Defines a bot.
+A state is represented as:
+    (community, hand, pot, ante, aggression, previousMove, dealer, chipsIn)
 '''
 class Bot(Player):
     
@@ -22,8 +23,15 @@ class Bot(Player):
         Player.__init__(self, chips);
         self.gamma = gamma;
         self.alpha = alpha;
-        self.values = defaultdict(float);
+        # Read in the table if it exists, otherwise create a new one
+        if os.path.exists(Constants.FILENAME):
+            self.values = util.readTable();
+        else:
+            self.values = defaultdict(float);
         self.eval = Evaluator();
+
+    def writeTable(self):
+        util.writeTable(self.values);
 
     def disableTraining(self):
         self.gamma = 1.0;
@@ -62,8 +70,6 @@ class Bot(Player):
         return self.values[(state, action)];
 
     def getMove(self, state):
-        if _debug:
-            print self.values;
         return self.computeActionFromQValues(state);
 
     def getValue(self, state):
