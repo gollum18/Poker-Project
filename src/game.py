@@ -173,6 +173,7 @@ class Game:
                         self.bot.subChips(ante);
                         self.bot.setAggression(ante, ante);
                     self.table.addToPot(ante);
+                    self.table.addToAnte(ante);
                 elif move == Constants.RAISE:
                     raiseAmt = 0;
                     if turn == Constants.PLAYER:

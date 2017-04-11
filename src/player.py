@@ -76,7 +76,7 @@ class Player:
     Get the players move from the command line.
     '''
     def getMove(self, cardsOnTable, pot, ante, prevMove):
-        print("These Cards are on the Table:");
+        print("\nThese Cards are on the Table:");
         util.printCards(cardsOnTable);
         print("Your Cards Are:");
         util.printCards(self.cards);
