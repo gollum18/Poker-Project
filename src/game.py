@@ -16,10 +16,9 @@ class Game:
     Create a poker game.
     Takes a number of rounds and an amount of starting chips.
     '''
-    def __init__(self, rounds = 10, chips = 1000, big = 50, little = 25, alpha = 0.5, gamma = 0.8, training = 10000):
+    def __init__(self, rounds = 10, chips = 1000, big = 50, little = 25, alpha = 0.5, gamma = 0.8):
         # Variables
         self.rounds = rounds;
-        self.chips = chips;
         self.player = Player(chips);
         self.bot = Bot(chips, alpha, gamma);
         self.big = big;
@@ -29,7 +28,6 @@ class Game:
         self.eval = Evaluator();
         self.moveLock = threading.Lock();
         self.dealer = choice([Constants.PLAYER, Constants.BOT]);
-        self.trainingIterations = training;
 
     '''
     Determines the winner at the end of a round. Will automatically deal out the pot.
@@ -80,20 +78,6 @@ class Game:
         return -nextState[7];
 
     '''
-    Gets a random response to the bots move, only called while the bot is training.
-    '''
-    def getTrainingMove(self, move):
-        if move == Constants.ALLIN:
-            return choice([Constants.CALL, Constants.FOLD]);
-        return choice([Constants.ALLIN, Constants.CALL, Constants.FOLD, Constants.RAISE]);
-
-    '''
-    Determines whether the bot is training or not. Will return true as long as it has training iterations remaining.
-    '''
-    def isTraining(self):
-        return False if self.trainingIterations == 0 else True;
-
-    '''
     Determines whether the game is over.
     A game is over if there are no more rounds, or a player is out of chips at the end
     of a round.
@@ -105,8 +89,6 @@ class Game:
             return True;
         elif self.bot.getChips() == 0:
             return True;
-        if self.trainingIterations > 0:
-            self.trainingIterations -= 1;
         return False;
 
     def cleanup(self):
@@ -131,14 +113,13 @@ class Game:
         # Gets the winner
         winner = None;
 
-        if self.trainingIterations == 0:
-            print("==========================================");
-            print("==========================================");
-            print("            BEGINNING ROUND #{0}".format(11-self.rounds));
-            print("             YOUR CHIPS: ${0}".format(self.player.getChips()));
-            print("           OPPONENT CHIPS: ${0}".format(self.bot.getChips()));
-            print("==========================================");
-            print("==========================================");
+        print("==========================================");
+        print("==========================================");
+        print("            BEGINNING ROUND #{0}".format(11-self.rounds));
+        print("             YOUR CHIPS: ${0}".format(self.player.getChips()));
+        print("           OPPONENT CHIPS: ${0}".format(self.bot.getChips()));
+        print("==========================================");
+        print("==========================================");
 
         while stage != Constants.EVAL and stage != Constants.FOLD and stage != Constants.ALLIN:
             # Deal out the cards
@@ -163,10 +144,7 @@ class Game:
             # Loop through the player moves
             for i in range(0, 2):
                 if turn == Constants.PLAYER:
-                    if self.trainingIterations > 0:
-                        move = self.getTrainingMove(move);
-                    else:
-                        move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
+                    move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
                 else:
                     move = self.bot.getMove(state);
                 print("The {0}s' move was {1}.".format(turn, move));
@@ -195,18 +173,15 @@ class Game:
                         self.bot.subChips(ante);
                         self.bot.setAggression(ante, ante);
                     self.table.addToPot(ante);
-                    #self.table.addToAnte(ante);
+                    self.table.addToAnte(ante);
                 elif move == Constants.RAISE:
                     raiseAmt = 0;
                     if turn == Constants.PLAYER:
-                        if self.trainingIterations > 0:
-                            raiseAmt = util.getBet(self.player.getChips(), self.minBet, util.getBetType(self.eval, self.player.getCards(), self.table.getCards()));
-                        else:
-                            raiseAmt = self.player.getBet();
+                        raiseAmt = self.player.getBet();
                         self.player.subChips(ante + raiseAmt);
                         self.player.setAggression(raiseAmt, ante);
                     else:
-                        raiseAmt = util.getBet(self.bot.getChips(), self.minBet, util.getBetType(self.eval, self.bot.getCards(), self.table.getCards()));
+                        raiseAmt = self.bot.getBet(self.minBet, self.bot.getBetType(self.bot.getCards(), self.table.getCards()));
                         self.bot.addToChipsIn(ante + raiseAmt);
                         self.bot.subChips(ante + raiseAmt);
                         self.bot.setAggression(raiseAmt, ante);
@@ -264,10 +239,7 @@ class Game:
             # Get the response from the opposing player
             turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
             if turn == Constants.PLAYER:
-                if self.trainingIterations > 0:
-                    move = self.getTrainingMove(move);
-                else:
-                    move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
+                move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
             else:
                 move = self.bot.getMove((self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn()));
             # There was a call
@@ -303,16 +275,4 @@ class Game:
         self.bot.empty();
         self.table.reset();
         self.rounds -=1;
-
-    '''
-    Resets the game for the next game.
-    '''
-    def reset(self, rounds):
-        self.player.empty();
-        self.bot.empty();
-        self.table.reset();
-        self.player.subChips(self.player.getChips());
-        self.bot.subChips(self.bot.getChips());
-        self.player.addChips(self.chips);
-        self.bot.addChips(self.chips);
-        self.rounds = rounds;
+        
