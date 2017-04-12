@@ -69,7 +69,7 @@ class Bot(Player):
         features = defaultdict(float);
 
         features['C-RATIO'] = util.chipRatio(self.chipsIn, state[2]);
-        features['STRENGTH'] = 1.0/util.strength(Evaluator(), self.getCards(), state[0]);
+        features['STRENGTH'] = util.strength(Evaluator(), self.getCards(), state[0]);
         features['AGGRESSION']= state[4];
         features['A-RATIO'] = 0 if self.getChips() == 0 else state[3]/self.getChips();
 
