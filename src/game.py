@@ -3,8 +3,8 @@ from player import Player
 from bot import Bot
 from table import Table
 from random import choice
+from random import randint
 from constants import Constants
-import threading
 import util
 
 '''
@@ -16,9 +16,11 @@ class Game:
     Create a poker game.
     Takes a number of rounds and an amount of starting chips.
     '''
-    def __init__(self, rounds = 10, chips = 1000, big = 50, little = 25, alpha = 0.5, gamma = 0.8, agent = Constants.GENERAL):
+    def __init__(self, rounds = 10, chips = 1000, big = 50, little = 25, alpha = 0.5, gamma = 0.8, agent = Constants.GENERAL, iterations = 10000):
         # Variables
         self.rounds = rounds;
+        self.roundsSoFar = 0;
+        self.chips = chips;
         self.player = Player(chips);
         self.bot = Bot(chips, alpha, gamma);
         self.big = big;
@@ -26,9 +28,10 @@ class Game:
         self.minBet = .25 * little;
         self.table = Table();
         self.eval = Evaluator();
-        self.moveLock = threading.Lock();
         self.dealer = choice([Constants.PLAYER, Constants.BOT]);
         self.agent = agent;
+        self.iterations = iterations;
+        self.iterationsSoFar = 0;
 
     '''
     Determines the winner at the end of a round. Will automatically deal out the pot.
@@ -41,14 +44,15 @@ class Game:
         # Get the strengths of both players hands
         pstr = self.eval.evaluate(self.player.getCards(), board);
         bstr = self.eval.evaluate(self.bot.getCards(), board);
-        # Print the strength of the hands
-        print("The player with the lower hand strength wins.");
-        print("The players had the following hand strengths:");
-        print("Player strength: {0}".format(pstr));
-        print("Bot stength: {0}".format(bstr));
-        # Print the players ranks
-        print("The player had the following hand: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))));
-        print("The bot had the following hand: {0}".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))));
+        if not self.isTraining():
+            # Print the strength of the hands
+            print("The player with the lower hand strength wins.");
+            print("The players had the following hand strengths:");
+            print("Player strength: {0}".format(pstr));
+            print("Bot stength: {0}".format(bstr));
+            # Print the players ranks
+            print("The player had the following hand: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))));
+            print("The bot had the following hand: {0}".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))));
         # Deal out the chips appropriately
         # I know this seems weird but hands in deuces are ranked starting at
         # 1 with 1 being the best hand.
@@ -78,13 +82,24 @@ class Game:
             return -nextState[3];
         return -nextState[7];
 
+    def isTraining(self):
+        return True if self.iterationsSoFar < self.iterations else False;
+
+    def getTrainingMove(self, move):
+        if move == Constants.ALLIN:
+            return choice([Constants.CALL, Constants.FOLD]);
+        return choice([Constants.ALLIN, Constants.CALL, Constants.FOLD, Constants.RAISE]);
+
+    def getTrainingBetAmt(self):
+        return randint(0, self.player.getChips());
+
     '''
     Determines whether the game is over.
     A game is over if there are no more rounds, or a player is out of chips at the end
     of a round.
     '''
     def isGameOver(self):
-        if self.rounds == 0:
+        if self.roundsSoFar >= self.rounds:
             return True;
         elif self.player.getChips() == 0:
             return True;
@@ -114,13 +129,14 @@ class Game:
         # Gets the winner
         winner = None;
 
-        print("==========================================");
-        print("==========================================");
-        print("            BEGINNING ROUND #{0}".format(11-self.rounds));
-        print("             YOUR CHIPS: ${0}".format(self.player.getChips()));
-        print("           OPPONENT CHIPS: ${0}".format(self.bot.getChips()));
-        print("==========================================");
-        print("==========================================");
+        if not self.isTraining():
+            print("==========================================");
+            print("==========================================");
+            print("            BEGINNING ROUND #{0}".format(11-self.roundsSoFar));
+            print("             YOUR CHIPS: ${0}".format(self.player.getChips()));
+            print("           OPPONENT CHIPS: ${0}".format(self.bot.getChips()));
+            print("==========================================");
+            print("==========================================");
 
         while stage != Constants.EVAL and stage != Constants.FOLD and stage != Constants.ALLIN:
             # Deal out the cards
@@ -145,23 +161,22 @@ class Game:
             # Loop through the player moves
             for i in range(0, 2):
                 if turn == Constants.PLAYER:
-                    move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
+                    if self.isTraining():
+                        move = self.getTrainingMove(move);
+                    else:
+                        move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
                 else:
                     move = self.bot.getMove(state);
-                print("The {0}s' move was {1}.".format(turn, move));
+                if not self.isTraining():
+                    print("The {0}s' move was {1}.".format(turn, move));
 
                 # Deal with the most recent move
-                # If the move is allin or a fold, deal with it outside, they are special conditions
-                if move != Constants.ALLIN and move != Constants.FOLD:
-                    # We will be modifying data, need to lock here
-                    self.moveLock.acquire();
-                else:
-                    if move == Constants.ALLIN:
-                        stage = move;
-                        break;
-                    elif move == Constants.FOLD:
-                        stage = move;
-                        break;
+                if move == Constants.ALLIN:
+                    stage = move;
+                    break;
+                elif move == Constants.FOLD:
+                    stage = move;
+                    break;
 
                 ante = self.table.getAnte();
 
@@ -187,7 +202,10 @@ class Game:
                 elif move == Constants.RAISE:
                     raiseAmt = 0;
                     if turn == Constants.PLAYER:
-                        raiseAmt = self.player.getBet();
+                        if self.isTraining():
+                            raiseAmt = self.getTrainingBetAmt();
+                        else:
+                            raiseAmt = self.player.getBet();
                         self.player.subChips(ante + raiseAmt);
                         self.player.setAggression(raiseAmt, ante);
                     else:
@@ -197,8 +215,9 @@ class Game:
                         self.bot.setAggression(raiseAmt, ante);
                     self.table.addToPot(ante + raiseAmt);
                     self.table.addToAnte(raiseAmt);
-                # Release the movelock
-                self.moveLock.release();
+                    if self.player.getChips() == 0 or self.bot.getChips() == 0:
+                        move = Constants.ALLIN;
+                        break;
 
                 # Call update in order to update the bots q-table
                 if turn == Constants.BOT:
@@ -223,9 +242,15 @@ class Game:
 
         # Check for all paths
         if stage == Constants.EVAL:
-            print("The result was a {0} win!!!!".format(self._evaluate()));
+            if not self.isTraining():
+                print("The result was a {0} win!!!!".format(self._evaluate()));
+            else:
+                self._evaluate();
             successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
-            self.bot.updateApproximate(state, move, successor, self._getReward(state, move, successor));
+            if self.agent == Constants.GENERAL:
+                self.bot.update(state, move, successor, self._getReward(state, move, successor));
+            else:
+                self.bot.updateApproximate(state, move, successor, self._getReward(state, move, successor));
         elif stage == Constants.FOLD:
             if turn == Constants.PLAYER:
                 self.bot.addChips(self.table.getPot());
@@ -254,7 +279,10 @@ class Game:
             # Get the response from the opposing player
             turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
             if turn == Constants.PLAYER:
-                move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
+                if self.isTraining():
+                    move = self.getTrainingMove(move);
+                else:
+                    move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
             else:
                 move = self.bot.getMove((self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn()));
             # There was a call
@@ -273,7 +301,10 @@ class Game:
                 # Deal out the remaining cards and evaluate
                 for i in range(0, 5-len(self.table.getCards())):
                     self.table.addCard(self.table.draw());
-                print("The result was a {0} win!!!!".format(self._evaluate()));
+                if not self.isTraining():
+                    print("The result was a {0} win!!!!".format(self._evaluate()));
+                else:
+                    self._evaluate();
             # There was a fold
             else:
                 if turn == Constants.PLAYER:
@@ -292,5 +323,13 @@ class Game:
         self.player.empty();
         self.bot.empty();
         self.table.reset();
-        self.rounds -=1;
-        
+        self.roundsSoFar += 1;
+
+    def reset(self):
+        self.iterationsSoFar += 1;
+        self.roundsSoFar = 0;
+        self.table.reset();
+        self.player.empty();
+        self.bot.empty();
+        self.player.setChips(self.chips);
+        self.bot.setChips(self.chips);

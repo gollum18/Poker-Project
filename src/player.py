@@ -30,6 +30,8 @@ class Player:
     def addChips(self, chips):
         self.chips += chips;
 
+    def setChips(self, chips):
+        self.chips = chips;
 
     '''
     Adds chips to the players in tracker.
@@ -42,12 +44,11 @@ class Player:
     '''
     Subtracts chips from the chip count.
     '''
-    def subChips(self, other):
-        if type(other) is int:
-            if self.chips - other < 0:
-                self.chips = 0;
-            else:
-                self.chips -= other;
+    def subChips(self, amt):
+        if self.chips - amt < 0:
+            self.chips = 0;
+        else:
+            self.chips -= amt;
 
     '''
     Empties the players
