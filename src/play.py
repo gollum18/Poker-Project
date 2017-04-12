@@ -5,8 +5,8 @@ import util
 game = Game(10, 1000, 30, 20);
 
 # Used to save the qtable before we exit
-import atexit
-atexit.register(game.cleanup);
+#import atexit
+#atexit.register(game.cleanup);
 
 while not game.isGameOver():
     game.playRound();
