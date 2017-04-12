@@ -5,6 +5,8 @@ class Constants:
     RIVER = "RIVER";
     EVAL = "EVAL";
     TERMINAL = "TERMINAL STATE";
+    GENERAL = "GENERAL";
+    APPROXIMATE = "APPROXIMATE";
 
     # Represents players and eval status
     PLAYER = "PLAYER";

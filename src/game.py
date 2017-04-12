@@ -16,7 +16,7 @@ class Game:
     Create a poker game.
     Takes a number of rounds and an amount of starting chips.
     '''
-    def __init__(self, rounds = 10, chips = 1000, big = 50, little = 25, alpha = 0.5, gamma = 0.8):
+    def __init__(self, rounds = 10, chips = 1000, big = 50, little = 25, alpha = 0.5, gamma = 0.8, agent = Constants.GENERAL):
         # Variables
         self.rounds = rounds;
         self.player = Player(chips);
@@ -28,6 +28,7 @@ class Game:
         self.eval = Evaluator();
         self.moveLock = threading.Lock();
         self.dealer = choice([Constants.PLAYER, Constants.BOT]);
+        self.agent = agent;
 
     '''
     Determines the winner at the end of a round. Will automatically deal out the pot.
@@ -202,7 +203,10 @@ class Game:
                 # Call update in order to update the bots q-table
                 if turn == Constants.BOT:
                     successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
-                    self.bot.updateApproximate(state, move, successor, self._getReward(state, move, successor));
+                    if self.agent == Constants.GENERAL:
+                        self.bot.update(state, move, successor, self._getReward(state, move, successor));
+                    else:
+                        self.bot.updateApproximate(state, move, successor, self._getReward(state, move, successor));
                 
                 # Switch turns    
                 turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
@@ -229,7 +233,10 @@ class Game:
             else:
                 self.player.addChips(self.table.getPot());
                 successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
-                self.bot.updateApproximate(state, move, successor, self._getReward(state, move, successor));
+                if self.agent == Constants.GENERAL:
+                    self.bot.update(state, move, successor, self._getReward(state, move, successor));
+                else:
+                    self.bot.updateApproximate(state, move, successor, self._getReward(state, move, successor));
         # An all in is a bit more complex
         elif stage == Constants.ALLIN:
             # Take out the chips for the allin player
@@ -276,7 +283,10 @@ class Game:
 
             if turn == Constants.BOT:
                 successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
-                self.bot.updateApproximate(state, move, successor, self._getReward(state, move, successor));
+                if self.agent == Constants.GENERAL:
+                    self.bot.update(state, move, successor, self._getReward(state, move, successor));
+                else:
+                    self.bot.updateApproximate(state, move, successor, self._getReward(state, move, successor));
 
         self.dealer = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
         self.player.empty();
