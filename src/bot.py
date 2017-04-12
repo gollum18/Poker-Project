@@ -28,6 +28,7 @@ class Bot(Player):
             self.values = util.readTable();
         else:
             self.values = defaultdict(float);
+        self.weights = defaultdict(float);
         self.eval = Evaluator();
 
     def writeTable(self):
@@ -64,6 +65,29 @@ class Bot(Player):
         # Arbitrarily pick a maximum move at random
         return random.choice(finalMoves);
 
+    def getFeatures(self, state, action):
+        features = defaultdict(float);
+
+        features['C-RATIO'] = util.chipRatio(self.chipsIn, state[2]);
+        features['STRENGTH'] = 1.0/util.strength(Evaluator(), self.getCards(), state[0]);
+        features['AGGRESSION']= state[4];
+        features['A-RATIO'] = 0 if self.getChips() == 0 else state[3]/self.getChips();
+
+        return features;
+
+    def getWeights(self):
+        return self.weights;
+
+    def getQValueApproximate(self, state, action):
+        q = 0;
+        features = self.getFeatures(state, action);
+        weights = self.getWeights();
+        #print 'Features: ', features;
+        #print 'Weights: ', weights;
+        for feat in features:
+            q += features[feat]*weights[feat];
+        return q;
+
     def getQValue(self, state, action):
         if (state, action) not in self.values:
             return 0.0;
@@ -76,9 +100,16 @@ class Bot(Player):
         return self.computeValueFromQValues(state);
     
     def update(self, state, action, successor, reward):
-        state = util.getKey(state[0]+state[1]);
+        key = util.getKey(state[0]+state[1]);
         sample = reward + self.gamma*self.getValue(successor);
-        self.values[(state, action)] = ((1-self.alpha)*self.getQValue(state, action))+(self.alpha*sample);
+        self.values[(key, action)] = ((1-self.alpha)*self.getQValue(key, action))+(self.alpha*sample);
+
+    def updateApproximate(self, state, action, successor, reward):
+        weights = self.getWeights();
+        features = self.getFeatures(state, action);
+        diff = reward+self.gamma*self.getValue(successor)-self.getQValueApproximate(state, action);
+        for feat in features:
+            weights[feat] += self.alpha*diff*features[feat];
 
     def getLegalActions(self, state):
         if state[5] == Constants.TERMINAL:
