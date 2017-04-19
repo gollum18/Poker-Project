@@ -30,6 +30,9 @@ class Player:
     def addChips(self, chips):
         self.chips += chips;
 
+    '''
+    Set the amount of chips the player has.
+    '''
     def setChips(self, chips):
         self.chips = chips;
 
@@ -58,6 +61,9 @@ class Player:
         self.chipsIn = 0;
         self.aggression = 1.0;
 
+    '''
+    Gets the amount the player has in the pot.
+    '''
     def getChipsIn(self):
         return self.chipsIn;
 
@@ -99,6 +105,9 @@ class Player:
         elif move == "r":
             return Constants.RAISE;
 
+    '''
+    Gets the bet from the player.
+    '''
     def getBet(self):
         amt = -1;
         while amt < 0:
@@ -108,8 +117,14 @@ class Player:
                 print("Must input a valid amount!");
         return amt;
 
+    '''
+    Gets the players aggression.
+    '''
     def getAggression(self):
         return self.aggression;
 
+    '''
+    Sets the players aggression.
+    '''
     def setAggression(self, amt, ante):
         self.aggression = amt/ante;

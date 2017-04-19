@@ -31,13 +31,22 @@ class Bot(Player):
         self.weights = defaultdict(float);
         self.eval = Evaluator();
 
+    '''
+    Writes the q-table out to file.
+    '''
     def writeTable(self):
         util.writeTable(self.values);
 
+    '''
+    Disables training.
+    '''
     def disableTraining(self):
         self.gamma = 1.0;
         self.alpha = 0.0
 
+    '''
+    Computes the maximum q-value from a state.
+    '''
     def computeValueFromQValues(self, state):
         actions = self.getLegalActions(state);
         if not actions:
@@ -47,6 +56,9 @@ class Bot(Player):
             maxValue = max(maxValue, self.getQValue(util.getKey(state[0]+state[1]), action));
         return maxValue;
 
+    '''
+    Computes the best action from a state.
+    '''
     def computeActionFromQValues(self, state):
         # Get the legal actions
         actions = self.getLegalActions(state);
@@ -65,19 +77,32 @@ class Bot(Player):
         # Arbitrarily pick a maximum move at random
         return random.choice(finalMoves);
 
+    '''
+    Gets the feature vector used in approximate q-learning.
+    '''
     def getFeatures(self, state, action):
         features = defaultdict(float);
 
+        # Get the chip ratio.
         features['C-RATIO'] = util.chipRatio(self.chipsIn, state[2]);
+        # Get the agents hand strength.
         features['STRENGTH'] = util.strength(Evaluator(), self.getCards(), state[0]);
+        # Get the agents aggression.
         features['AGGRESSION']= state[4];
+        # Get the ratio representing the amount of chips the agent has in the pot
         features['A-RATIO'] = 0 if self.getChips() == 0 else state[3]/self.getChips();
 
         return features;
 
+    '''
+    Get the weight vector used in approximate q-learning.
+    '''
     def getWeights(self):
         return self.weights;
 
+    '''
+    Runs approximate q-learning for a given state and action.
+    '''
     def getQValueApproximate(self, state, action):
         q = 0;
         features = self.getFeatures(state, action);
@@ -88,22 +113,39 @@ class Bot(Player):
             q += features[feat]*weights[feat];
         return q;
 
+    '''
+    Get the q-value from a given state and action.
+    '''
     def getQValue(self, state, action):
         if (state, action) not in self.values:
             return 0.0;
         return self.values[(state, action)];
 
+    '''
+    Get the best move from a state.
+    '''
     def getMove(self, state):
         return self.computeActionFromQValues(state);
 
+    '''
+    Get the best q-value from a state.
+    '''
     def getValue(self, state):
         return self.computeValueFromQValues(state);
-    
+
+    '''
+    Called by the environment in order to update the q-table, do not call this
+    directly. This method is used with q-learning.
+    '''
     def update(self, state, action, successor, reward):
         key = util.getKey(state[0]+state[1]);
         sample = reward + self.gamma*self.getValue(successor);
         self.values[(key, action)] = ((1-self.alpha)*self.getQValue(key, action))+(self.alpha*sample);
 
+    '''
+    Called by the environment in order to update the q-table, do not call this
+    directly. This method is used with approximate q-learning.
+    '''
     def updateApproximate(self, state, action, successor, reward):
         weights = self.getWeights();
         features = self.getFeatures(state, action);
@@ -111,6 +153,9 @@ class Bot(Player):
         for feat in features:
             weights[feat] += self.alpha*diff*features[feat];
 
+    '''
+    Gets the legal actions from a state.
+    '''
     def getLegalActions(self, state):
         if state[5] == Constants.TERMINAL:
             return None;

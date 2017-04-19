@@ -82,16 +82,26 @@ class Game:
             return -nextState[3];
         return -nextState[7];
 
+    '''
+    Determines whether the agent is training or not.
+    '''
     def isTraining(self):
         return True if self.iterationsSoFar < self.iterations else False;
 
+    '''
+    Gets the training move for the simulated player given a previous move.
+    Currently it is randomized, would ideally like to make this more accurate.
+    '''
     def getTrainingMove(self, move):
         if move == Constants.ALLIN:
             return choice([Constants.CALL, Constants.FOLD]);
         return choice([Constants.ALLIN, Constants.CALL, Constants.FOLD, Constants.RAISE]);
 
+    '''
+    Get the amount of chips to bet on raise.
+    '''
     def getTrainingBetAmt(self):
-        return randint(0, self.player.getChips());
+        return randint(1, self.player.getChips());
 
     '''
     Determines whether the game is over.
@@ -107,6 +117,10 @@ class Game:
             return True;
         return False;
 
+    '''
+    Automatically called by play.py to write the q-table out to file.
+    @Deprecated
+    '''
     def cleanup(self):
         self.bot.writeTable();
     
@@ -132,7 +146,7 @@ class Game:
         if not self.isTraining():
             print("==========================================");
             print("==========================================");
-            print("            BEGINNING ROUND #{0}".format(11-self.roundsSoFar));
+            print("            BEGINNING ROUND #{0}".format(self.roundsSoFar+1));
             print("             YOUR CHIPS: ${0}".format(self.player.getChips()));
             print("           OPPONENT CHIPS: ${0}".format(self.bot.getChips()));
             print("==========================================");
@@ -312,6 +326,7 @@ class Game:
                 else:
                     self.player.addChips(self.table.getPot());
 
+            # If the previous move was made by the bot, then 
             if turn == Constants.BOT:
                 successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
                 if self.agent == Constants.GENERAL:
@@ -319,12 +334,18 @@ class Game:
                 else:
                     self.bot.updateApproximate(state, move, successor, self._getReward(state, move, successor));
 
+        # Swap turn for the next round
+        turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
+        # Resets for a new round
         self.dealer = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
         self.player.empty();
         self.bot.empty();
         self.table.reset();
         self.roundsSoFar += 1;
 
+    '''
+    Called by play,py to reset the instance for a new game.
+    '''
     def reset(self):
         self.iterationsSoFar += 1;
         self.roundsSoFar = 0;

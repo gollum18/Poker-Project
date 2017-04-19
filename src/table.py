@@ -20,18 +20,33 @@ class Table:
     def addCard(self, card):
         self.cards.append(card);
 
+    '''
+    Adds to the current ante on the table.
+    '''
     def addToAnte(self, amt):
         self.ante += amt;
 
+    '''
+    Adds to the current pot on the table.
+    '''
     def addToPot(self, amt):
         self.pot += amt;
 
+    '''
+    Gets the current ante.
+    '''
     def getAnte(self):
         return self.ante;
 
+    '''
+    Gets the current pot.
+    '''
     def getPot(self):
         return self.pot;
 
+    '''
+    Gets the community cards on the table.
+    '''
     def getCards(self):
         return self.cards;
 
