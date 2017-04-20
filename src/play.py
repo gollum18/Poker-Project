@@ -14,7 +14,7 @@ big = 30;
 little = 20;
 alpha = 0.5;
 gamma = 0.8;
-agent = Constants.APPROXIMATE;
+agent = Constants.GENERAL;
 
 args = sys.argv;
 

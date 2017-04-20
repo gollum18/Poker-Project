@@ -17,6 +17,13 @@ class Player:
         self.chipsIn = 0;
         self.chipRatio = 0.0;
         self.aggression = 1.0;
+        self.previousMove = None;
+
+    '''
+    Gets the previous move that this player made.
+    '''
+    def getPreviousMove(self):
+        return self.previousMove;
 
     '''
     Adds a card to the players hand
@@ -60,6 +67,7 @@ class Player:
         del self.cards[:];
         self.chipsIn = 0;
         self.aggression = 1.0;
+        self.previousMove = None;
 
     '''
     Gets the amount the player has in the pot.
@@ -97,12 +105,16 @@ class Player:
             while move != "a" and move != "c" and move != "f" and move != "r":
                 move = raw_input("Do you go ALL IN [a], CALL [c], FOLD [f], or RAISE [r]: ").lower();
         if move == "a":
+            self.previousMove = Constants.ALLIN;
             return Constants.ALLIN;
         elif move == "c":
+            self.previousMove = Constants.CALL;
             return Constants.CALL;
         elif move == "f":
+            self.previousMove = Constants.FOLD;
             return Constants.FOLD;
         elif move == "r":
+            self.previousMove = Constants.RAISE;
             return Constants.RAISE;
 
     '''
