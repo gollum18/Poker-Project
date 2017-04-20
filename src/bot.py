@@ -19,30 +19,34 @@ class Bot(Player):
     '''
     Creates a bot by calling the parent constructor in the player class.
     '''
-    def __init__(self, chips, alpha, gamma):
+    def __init__(self, chips, alpha, gamma, agent):
         Player.__init__(self, chips);
         self.gamma = gamma;
         self.alpha = alpha;
+        self.agent = agent;
         # Read in the table if it exists, otherwise create a new one
-        if os.path.exists(Constants.FILENAME):
-            self.values = util.readTable();
+        if self.agent == Constants.APPROXIMATE:
+            if os.path.exists(Constants.WFILE):
+                self.weights = util.read(self.agent);
+                self.values = defaultdict();
+            else:
+                self.weights = defaultdict(float);
+                self.values = defaultdict();
         else:
-            self.values = defaultdict(float);
-        self.weights = defaultdict(float);
+            if os.path.exists(Constants.QFILE):
+                self.values = util.read(self.agent);
+            else:
+                self.values = defaultdict(float);
         self.eval = Evaluator();
+
+    def getAgent(self):
+        return self.agent;
 
     '''
     Writes the q-table out to file.
     '''
-    def writeTable(self):
-        util.writeTable(self.values);
-
-    '''
-    Disables training.
-    '''
-    def disableTraining(self):
-        self.gamma = 1.0;
-        self.alpha = 0.0
+    def write(self):
+        util.write(self.values if self.agent == Constants.GENERAL else self.weights, self.agent);
 
     '''
     Computes the maximum q-value from a state.
@@ -152,6 +156,7 @@ class Bot(Player):
         diff = reward+self.gamma*self.getValue(successor)-self.getQValueApproximate(state, action);
         for feat in features:
             weights[feat] += self.alpha*diff*features[feat];
+        print weights;
 
     '''
     Gets the legal actions from a state.
@@ -162,45 +167,6 @@ class Bot(Player):
         if state[5] == Constants.ALLIN:
             return [Constants.CALL, Constants.FOLD];
         return [Constants.CALL, Constants.ALLIN, Constants.FOLD, Constants.RAISE];
-
-## May or may not be needed, this is a way to generate successor states
-##    '''
-##    A state is represented as:
-##        (community, hand, pot, ante, aggression, previousMove, dealer, chipsIn)
-##    '''
-##    def getSuccessorStates(self, state)
-##        states = [];
-##        for action in self.getLegalActions(state):
-##            # Check who the dealer is
-##            # If the dealer is the player, then the bot bets first
-##            if state[6] == Constants.PLAYER:
-##                if action == Constants.ALLIN:
-##                    states.append(state[0], state[1], state[2]+self.getChips(), state[3]+self.getChips(), self.getChips()/state[3], Constants.ALLIN, state[6], self.getChipsIn()+self.getChips()); 
-##                elif action == Constants.CALL:
-##                    states.append(state[0], state[1], state[2]+state[3], state[3]*2, 1.0, Constants.CALL, state[6], state[3]+state[7]);
-##                elif action == Constants.FOLD:
-##                    states.append(state[0], state[1], state[2], state[3], state[4], Constants.TERMINAL, state[6], state[7]);
-##                elif action == Constants.RAISE:
-##                    amt = self.getBet(state[3], self.getBetType(state[1], state[0]));
-##                    states.append(state[0], state[1], state[2]+amt, state[3]+amt, amt/state[3], Constants.RAISE, state[6], state[7]+amt);
-##            # Otherwise the bot bets second in this round
-##            else:
-##                # Build a deck for each card
-##                for card in util.buildDeck(state[0]+state[1]):
-##                    # Copy everythong that needs copied
-##                    comm = deepcopy(state[0]);
-##                    comm.append(card);
-##                    # Account for the appropriate action
-##                    if action == Constants.ALLIN:
-##                        states.append(comm, state[1], state[2]+self.getChips(), state[3]+self.getChips(), self.getChips()/state[3], Constants.ALLIN, state[6], self.getChipsIn()+self.getChips()); 
-##                    elif action == Constants.CALL:
-##                        states.append(comm, state[1], state[2]+state[3], state[3]*2, 1.0, Constants.CALL, state[6], state[3]+state[7]);
-##                    elif action == Constants.FOLD:
-##                        states.append(comm, state[1], state[2], state[3], state[4], Constants.TERMINAL, state[6], state[7]);
-##                    elif actions == Constants.RAISE:
-##                        amt = self.getBet(state[3], self.getBetType(state[1], comm));
-##                        states.append(comm, state[1], state[2]+amt, state[3]+amt, amt/state[3], Constants.RAISE, state[6], state[7]+amt);
-##        return states;
                 
     '''
     This algorithm is a modified version of the getBetAmt algorithm found in
