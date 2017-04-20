@@ -20,24 +20,24 @@ def printCards(cards):
 '''
 Writes the q-learning dictionary to file, overwriting what was in there.
 '''
-def writeTable(qtable):
-    outFile = open(Constants.FILENAME, 'w');
-    for key, value in qtable.iteritems():
-        outFile.write("{0} {1} {2}\n".format(key[0], key[1], value));
-    outFile.close();
+def write(table, agent):
+    outfile = open(Constants.QFILE if agent == Constants.GENERAL else Constants.WFILE, 'w');
+    for key, value in table.iteritems():
+        outfile.write("{0} {1} {2}\n".format(key[0], key[1], value) if agent == Constants.GENERAL else "{0} {1}\n".format(key, value));
+    outfile.close();
 
 '''
 Loads in the q-learning dictionary from file.
 '''
-def readTable():
-    inFile = open(Constants.FILENAME, 'r');
+def read(agent):
+    inFile = open(Constants.QFILE if agent == Constants.GENERAL else Constants.WFILE, 'r');
     lines = [line.rstrip('\n') for line in inFile];
     inFile.close();
-    qtable = defaultdict(float);
+    table = defaultdict(float);
     for line in lines:
         split = line.split();
-        qtable[(int(split[0]), split[1])] = float(split[2]);
-    return qtable;
+        table[(int(split[0]), split[1]) if agent == Constants.GENERAL else (int(split[0]))] = float(split[2]) if agent == Constants.GENERAL else float(split[1]);
+    return table;
 
 '''
 Gets the winning percentages of each player.
