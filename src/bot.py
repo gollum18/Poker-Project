@@ -129,7 +129,8 @@ class Bot(Player):
     Get the best move from a state.
     '''
     def getMove(self, state):
-        return self.computeActionFromQValues(state);
+        self.previousMove = self.computeActionFromQValues(state);
+        return self.previousMove;
 
     '''
     Get the best q-value from a state.
@@ -156,7 +157,6 @@ class Bot(Player):
         diff = reward+self.gamma*self.getValue(successor)-self.getQValueApproximate(state, action);
         for feat in features:
             weights[feat] += self.alpha*diff*features[feat];
-        print weights;
 
     '''
     Gets the legal actions from a state.

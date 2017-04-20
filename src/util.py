@@ -21,22 +21,36 @@ def printCards(cards):
 Writes the q-learning dictionary to file, overwriting what was in there.
 '''
 def write(table, agent):
-    outfile = open(Constants.QFILE if agent == Constants.GENERAL else Constants.WFILE, 'w');
+    outFile = None;
+    if agent == Constants.GENERAL:
+        outFile = open(Constants.QFILE, 'w');
+    else:
+        outFile = open(Constants.WFILE, 'w');
     for key, value in table.iteritems():
-        outfile.write("{0} {1} {2}\n".format(key[0], key[1], value) if agent == Constants.GENERAL else "{0} {1}\n".format(key, value));
-    outfile.close();
+        if agent == Constants.GENERAL:
+            outFile.write("{0} {1} {2}\n".format(key[0], key[1], value));
+        else:
+            outFile.write("{0} {1}\n".format(key, value));
+    outFile.close();
 
 '''
 Loads in the q-learning dictionary from file.
 '''
 def read(agent):
-    inFile = open(Constants.QFILE if agent == Constants.GENERAL else Constants.WFILE, 'r');
+    inFile = None;
+    if agent == Constants.GENERAL:
+        inFile = open(Constants.QFILE, 'r');
+    else:
+        inFile = open(Constants.WFILE, 'r');
     lines = [line.rstrip('\n') for line in inFile];
     inFile.close();
     table = defaultdict(float);
     for line in lines:
         split = line.split();
-        table[(int(split[0]), split[1]) if agent == Constants.GENERAL else (int(split[0]))] = float(split[2]) if agent == Constants.GENERAL else float(split[1]);
+        if agent == Constants.GENERAL:
+            table[int(split[0]), split[1]] = float(split[2]);
+        else:
+            table[split[0]] = float(split[1]);
     return table;
 
 '''
