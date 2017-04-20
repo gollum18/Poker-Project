@@ -80,9 +80,9 @@ class Game:
             if action == Constants.CALL:
                 return 0;
             elif action == Constants.FOLD:
-                return -nextState[7];
+                return -nextState[2];
             else:
-                return nextState[2]*util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0])[Constants.BOT]-nextState[7];
+                return nextState[2]*util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0])[Constants.BOT];
 ##        if action == Constants.FOLD:
 ##            return -nextState[7];
 ##        else:
