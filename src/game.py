@@ -69,7 +69,7 @@ class Game:
     Rewards are as follows:
         A Fold returns -chipsIn
         A Call returns -ante
-        A Raise or Allin returns pot*P(winning)-chipsIn
+        A Raise or Allin returns pot*P(winning)
     '''
     def _getReward(self, state, action, nextState, winner):
         if winner == Constants.PLAYER:
@@ -82,7 +82,8 @@ class Game:
             elif action == Constants.FOLD:
                 return -nextState[2];
             else:
-                return nextState[2]*util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0])[Constants.BOT];
+                percentiles = util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0]); 
+                return nextState[2]*(percentiles[Constants.BOT]-percentiles[Constants.PLAYER]);
 ##        if action == Constants.FOLD:
 ##            return -nextState[7];
 ##        else:

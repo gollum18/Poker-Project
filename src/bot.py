@@ -39,6 +39,9 @@ class Bot(Player):
                 self.values = defaultdict(float);
         self.eval = Evaluator();
 
+    '''
+    Gets the agent type, either GENERAL or APPROXIMATE.
+    '''
     def getAgent(self):
         return self.agent;
 
@@ -93,8 +96,6 @@ class Bot(Player):
         features['STRENGTH'] = util.strength(Evaluator(), self.getCards(), state[0]);
         # Get the agents aggression.
         features['AGGRESSION']= state[4];
-        # Get the ratio representing the amount of chips the agent has in the pot
-        features['A-RATIO'] = 0 if self.getChips() == 0 else state[3]/self.getChips();
 
         return features;
 
