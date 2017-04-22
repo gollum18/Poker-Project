@@ -165,7 +165,7 @@ class Bot(Player):
     def getLegalActions(self, state):
         if state[5] == Constants.TERMINAL:
             return None;
-        if state[5] == Constants.ALLIN:
+        if state[5] == Constants.ALLIN or state[5] == Constants.RAISE:
             return [Constants.CALL, Constants.FOLD];
         return [Constants.CALL, Constants.ALLIN, Constants.FOLD, Constants.RAISE];
                 
