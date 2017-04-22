@@ -12,7 +12,7 @@ class Table:
         self.deck = Deck();
         self.cards = [];
         self.pot = 0;
-        self.ante = 0;
+        self.ante = 0
 
     '''
     Adds a card to the cards on the table.
@@ -21,22 +21,10 @@ class Table:
         self.cards.append(card);
 
     '''
-    Adds to the current ante on the table.
-    '''
-    def addToAnte(self, amt):
-        self.ante += amt;
-
-    '''
     Adds to the current pot on the table.
     '''
     def addToPot(self, amt):
         self.pot += amt;
-
-    '''
-    Gets the current ante.
-    '''
-    def getAnte(self):
-        return self.ante;
 
     '''
     Gets the current pot.

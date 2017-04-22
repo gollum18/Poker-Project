@@ -41,11 +41,20 @@ class Game:
         # Get the strengths of both players hands
         pstr = self.eval.evaluate(self.player.getCards(), board);
         bstr = self.eval.evaluate(self.bot.getCards(), board);
-        # Print the strength of the hands
-        print("The player with the lower hand strength wins.");
-        print("The players had the following hand strengths:");
-        print("Player strength: {0}".format(pstr));
-        print("Bot stength: {0}".format(bstr));
+        # Print showdown
+        print("");
+        print("==========================================");
+        print("==========================================");
+        print("                 SHOWDOWN");
+        print("==========================================");
+        print("==========================================");
+        print("Cards on the board:");
+        util.printCards(self.table.getCards());
+        print("You have these cards:");
+        util.printCards(self.player.getCards());
+        print("THe bot had these cards:");
+        util.printCards(self.bot.getCards());
+        
         # Print the players ranks
         print("The player had the following hand: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))));
         print("The bot had the following hand: {0}".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))));
@@ -59,8 +68,8 @@ class Game:
             self.bot.addChips(pot);
             return Constants.BOT;
         else:
-            self.player.addChips(pot/2);
-            self.bot.addChips(pot/2);
+            self.player.addChips(floor(pot/2));
+            self.bot.addChips(floor(pot/2));
             return "TIE";
 
     '''
@@ -119,11 +128,11 @@ class Game:
     Plays a round.
     '''
     def playRound(self):
-        self.table.addToAnte(self.little);
         self.table.addToPot(self.little+self.big);
         # Sub the blinds off
         self.player.subChips(self.big if self.dealer == Constants.PLAYER else self.little);
         self.bot.subChips(self.big if self.dealer == Constants.BOT else self.little);
+        self.player.addToChipsIn(self.big if self.dealer == Constants.PLAYER else self.little);
         self.bot.addToChipsIn(self.big if self.dealer == Constants.BOT else self.little);
         # Stores the current player to go
         turn = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER;
@@ -135,7 +144,10 @@ class Game:
         winner = None;
         # Hold the successor state
         successor = None;
+        # The last ante played
+        lastAnte = 0;
 
+        print("");
         print("==========================================");
         print("==========================================");
         print("            BEGINNING ROUND #{0}".format(self.roundsSoFar+1));
@@ -145,6 +157,16 @@ class Game:
         print("==========================================");
 
         while stage != Constants.EVAL and stage != Constants.FOLD and stage != Constants.ALLIN:
+            if self.player.getChips() == 0:
+                turn = Constants.PLAYER;
+                stage = Constants.ALLIN;
+                lastAnte = self.table.getPot();
+                break;
+            elif self.bot.getChips() == 0:
+                turn = Constants.BOT;
+                stage = Constants.ALLIN;
+                lastAnte = self.table.getPot();
+                break;
             # Deal out the cards
             if stage == Constants.FLOP:
                 for i in range(0, 5):
@@ -161,15 +183,17 @@ class Game:
                             self.bot.addCard(self.table.draw());
             elif stage == Constants.TURN or stage == Constants.RIVER:
                 self.table.addCard(self.table.draw());
-
-            state = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.player.getPreviousMove(), self.dealer, self.bot.getChipsIn());
-            
+               
             # Loop through the player moves
             for i in range(0, 2):
+                state = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), 0, self.bot.getAggression(), self.player.getPreviousMove(), self.dealer, self.bot.getChipsIn());
+                
                 if turn == Constants.PLAYER:
-                    move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getPreviousMove());
+                    move = self.player.getMove(self.table.getCards(), self.table.getPot(), 0, self.bot.getPreviousMove());
+                    self.player.setPreviousMove(move);
                 else:
                     move = self.bot.getMove(state);
+                    self.bot.setPreviousMove(move);
                 print("The {0}s' move was {1}.".format(turn, self.player.getPreviousMove() if turn == Constants.PLAYER else self.bot.getPreviousMove()));
 
                 # Deal with the most recent move
@@ -179,48 +203,59 @@ class Game:
                 elif move == Constants.FOLD:
                     stage = move;
                     break;
-
-                ante = self.table.getAnte();
-
-                if turn == Constants.PLAYER and self.player.getChips() < ante:
-                    move = Constants.ALLIN;
-                    stage = move;
-                    break;
-                elif turn == Constants.BOT and self.bot.getChips() < ante:
-                    move = Constants.ALLIN;
-                    stage = move;
-                    break;
                 
-                # Otherwise, deal with the move here
-                if move == Constants.CALL:
+                if move == Constants.RAISE:
                     if turn == Constants.PLAYER:
-                        self.player.subChips(ante);
-                        self.player.setAggression(ante, ante);
+                        amt = self.player.getBet(1);
+                        ante = amt;
+                        lastAnte = ante;
+                        self.player.subChips(amt);
+                        self.player.addToChipsIn(amt);
+                        self.player.setAggression(amt, 1);
+                        self.table.addToPot(amt);
+                        response = self.bot.getMove(state);
+                        if response == Constants.CALL:
+                            self.bot.setPreviousMove(Constants.CALL);
+                            self.bot.subChips(amt);
+                            self.bot.addToChipsIn(amt);
+                            self.bot.setAggression(amt, ante);
+                            self.table.addToPot(amt);
+                        else:
+                            turn = Constants.BOT;
+                            stage == response;
+                            break;
                     else:
-                        self.bot.subChips(ante);
-                        self.bot.setAggression(ante, ante);
-                    self.table.addToPot(ante);
-                    self.table.addToAnte(ante);
-                elif move == Constants.RAISE:
-                    raiseAmt = 0;
-                    if turn == Constants.PLAYER:
-                        raiseAmt = self.player.getBet();
-                        self.player.subChips(ante + raiseAmt);
-                        self.player.setAggression(raiseAmt, ante);
-                    else:
-                        raiseAmt = self.bot.getBet(self.minBet, self.bot.getBetType(self.bot.getCards(), self.table.getCards()));
-                        self.bot.addToChipsIn(ante + raiseAmt);
-                        self.bot.subChips(ante + raiseAmt);
-                        self.bot.setAggression(raiseAmt, ante);
-                    self.table.addToPot(ante + raiseAmt);
-                    self.table.addToAnte(raiseAmt);
-                    if self.player.getChips() == 0 or self.bot.getChips() == 0:
+                        amt = self.bot.getBet(1, self.bot.getBetType(self.bot.getCards(), self.table.getCards()));
+                        ante = amt;
+                        lastAnte = ante;
+                        self.bot.subChips(amt);
+                        self.bot.addToChipsIn(amt);
+                        self.bot.setAggression(amt, 1);
+                        self.table.addToPot(amt);
+                        response = self.player.getMove(self.table.getCards(), self.table.getPot(), amt, Constants.RAISE);
+                        if response == Constants.CALL:
+                            self.player.setPreviousMove(Constants.CALL);
+                            self.player.subChips(amt);
+                            self.player.addToChipsIn(amt);
+                            self.player.setAggression(amt, ante);
+                            self.table.addToPot(amt);
+                        else:
+                            turn = Constants.PLAYER;
+                            stage = response;
+                            break;
+                    successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), amt, self.bot.getAggression(), self.player.getPreviousMove(), self.dealer, self.bot.getChipsIn());
+                    if self.player.getChips() == 0:
+                        turn = Constants.PLAYER;
+                        move = constants.ALLIN;
+                        break;
+                    elif self.bot.getChips() == 0:
+                        turn = Constants.BOT;
                         move = Constants.ALLIN;
                         break;
 
                 # Call update in order to update the bots q-table
+                successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), self.player.getPreviousMove(), self.dealer, self.bot.getChipsIn());
                 if turn == Constants.BOT:
-                    successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
                     if self.bot.getAgent() == Constants.GENERAL:
                         self.bot.update(state, move, successor, self._getReward(state, move, successor, None));
                     else:
@@ -228,6 +263,9 @@ class Game:
                 
                 # Switch turns    
                 turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
+
+            self.player.setPreviousMove(None);
+            self.bot.setPreviousMove(None);
 
             # Increment the stage
             if stage == Constants.FLOP:
@@ -237,52 +275,53 @@ class Game:
             elif stage == Constants.RIVER:
                 stage = Constants.EVAL;
 
-        state = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
+        state = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
 
         # Check for all paths
         if stage == Constants.EVAL:
             print("The result was a {0} win!!!!".format(self._evaluate()));
-            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
+            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
         elif stage == Constants.FOLD:
             if turn == Constants.PLAYER:
                 self.bot.addChips(self.table.getPot());
-                successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
+                successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
             else:
                 self.player.addChips(self.table.getPot());
-                successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
+                successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
         # An all in is a bit more complex
         elif stage == Constants.ALLIN:
             # Take out the chips for the allin player
-            if turn == Constants.PLAYER:
+            if turn == Constants.PLAYER and self.player.getChips > 0:
+                lastAnte = self.player.getChips();
                 self.table.addToPot(self.player.getChips());
-                self.table.addToAnte(self.player.getChips());
+                self.player.addToChipsIn(self.player.getChips());
+                self.player.setAggression(self.player.getChips(), 1);
                 self.player.subChips(self.player.getChips());
-                self.player.setAggression(self.player.getChips(), self.table.getAnte());
-            else:
+            elif turn == Constants.BOT and self.bot.getChips() > 0:
+                lastAnte = self.bot.getChips();
                 self.table.addToPot(self.bot.getChips());
-                self.table.addToAnte(self.bot.getChips());
                 self.bot.addToChipsIn(self.bot.getChips());
+                self.bot.setAggression(self.bot.getChips(), 1);
                 self.bot.subChips(self.bot.getChips());
-                self.bot.setAggression(self.player.getChips(), self.table.getAnte());
             # Get the response from the opposing player
             turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;
             if turn == Constants.PLAYER:
-                move = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), move);
+                move = self.player.getMove(self.table.getCards(), self.table.getPot(), lastAnte, move);
             else:
-                move = self.bot.getMove((self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn()));
+                move = self.bot.getMove((self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn()));
             # There was a call
             if move == Constants.CALL:
                 # Take out the ante, or agents chips if taking ante would put the agent in the negative
                 if turn == Constants.PLAYER:
-                    self.table.addToPot(self.player.getChips());
-                    self.player.addToChipsIn(self.table.getAnte());
-                    self.player.setAggression(self.table.getAnte(), self.table.getAnte());
-                    self.player.subChips(self.table.getAnte());
+                    self.table.addToPot(self.player.getChips() if self.player.getChips() - lastAnte < 0 else lastAnte);
+                    self.player.addToChipsIn(self.player.getChips() if self.player.getChips() - lastAnte < 0 else lastAnte);
+                    self.player.setAggression(lastAnte, 1);
+                    self.player.subChips(self.player.getChips() if self.player.getChips() - lastAnte < 0 else lastAnte);
                 else:
-                    self.table.addToPot(self.bot.getChips());
-                    self.bot.addToChipsIn(self.table.getAnte());
-                    self.bot.setAggression(self.table.getAnte(), self.table.getAnte());
-                    self.bot.subChips(self.table.getAnte());
+                    self.table.addToPot(self.bot.getChips() if self.bot.getChips() - lastAnte < 0 else lastAnte);
+                    self.bot.addToChipsIn(self.bot.getChips() if self.bot.getChips() - lastAnte < 0 else lastAnte);
+                    self.bot.setAggression(lastAnte, 1);
+                    self.bot.subChips(self.bot.getChips() if self.bot.getChips() - lastAnte < 0 else lastAnte);
                 # Deal out the remaining cards and evaluate
                 for i in range(0, 5-len(self.table.getCards())):
                     self.table.addCard(self.table.draw());
@@ -298,11 +337,11 @@ class Game:
                     winner = Constants.PLAYER;
 
         if stage == Constants.EVAL or stage == Constants.ALLIN:
-            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
+            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn());
             if self.bot.getAgent() == Constants.GENERAL:
-                self.bot.update(state, move, successor, self._getReward(state, self.bot.getPreviousMove(), (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn()), winner));
+                self.bot.update(state, move, successor, self._getReward(state, self.bot.getPreviousMove(), (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn()), winner));
             else:
-                self.bot.updateApproximate(state, move, successor, self._getReward(state, self.bot.getPreviousMove(), (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn()), winner));
+                self.bot.updateApproximate(state, move, successor, self._getReward(state, self.bot.getPreviousMove(), (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), move, self.dealer, self.bot.getChipsIn()), winner));
 
         # Swap turn for the next round
         turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT;

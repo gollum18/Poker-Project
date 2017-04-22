@@ -26,6 +26,12 @@ class Player:
         return self.previousMove;
 
     '''
+    Sets the previous move
+    '''
+    def setPreviousMove(self, move):
+        self.previousMove = move;
+
+    '''
     Adds a card to the players hand
     '''
     def addCard(self, card):
@@ -98,9 +104,12 @@ class Player:
         print("You have ${0}, Pot is ${1}, Ante is ${2}.".format(self.chips, pot, ante));
 
         move = "";
-        if prevMove == Constants.ALLIN:
+        if prevMove == Constants.ALLIN or prevMove == Constants.RAISE:
             while move != "c" and move != "f":
-                move = raw_input("Bot went all in!! Do you CALL [c], or FOLD [f]: ").lower();
+                if prevMove == Constants.ALLIN:    
+                    move = raw_input("Bot went all in!! Do you CALL [c], or FOLD [f]: ").lower();
+                else:
+                    move = raw_input("Bot raised!! Do you CALL [c], or FOLD [f]: ").lower();
         else:
             while move != "a" and move != "c" and move != "f" and move != "r":
                 move = raw_input("Do you go ALL IN [a], CALL [c], FOLD [f], or RAISE [r]: ").lower();
@@ -120,9 +129,9 @@ class Player:
     '''
     Gets the bet from the player.
     '''
-    def getBet(self):
+    def getBet(self, raiseAmt):
         amt = -1;
-        while amt < 0:
+        while amt < raiseAmt:
             try:
                 amt = int(raw_input("Raise By: "));
             except ValueError:
