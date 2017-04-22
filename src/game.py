@@ -5,6 +5,7 @@ from table import Table
 from random import choice
 from random import randint
 from constants import Constants
+from math import floor
 import util
 
 '''
@@ -93,15 +94,6 @@ class Game:
             else:
                 percentiles = util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0]); 
                 return nextState[2]*(percentiles[Constants.BOT]-percentiles[Constants.PLAYER]);
-##        if action == Constants.FOLD:
-##            return -nextState[7];
-##        else:
-##            return 
-##        if action == Constants.RAISE or action == Constants.ALLIN:
-##            return nextState[2]*util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0])[Constants.BOT]-nextState[7];
-##        elif action == Constants.CALL:
-##            return 0;
-##        return -nextState[7];
 
     '''
     Determines whether the game is over.
@@ -219,6 +211,7 @@ class Game:
                             self.bot.subChips(amt);
                             self.bot.addToChipsIn(amt);
                             self.bot.setAggression(amt, ante);
+                            print("Adding to pot...");
                             self.table.addToPot(amt);
                         else:
                             turn = Constants.BOT;
@@ -232,18 +225,19 @@ class Game:
                         self.bot.addToChipsIn(amt);
                         self.bot.setAggression(amt, 1);
                         self.table.addToPot(amt);
-                        response = self.player.getMove(self.table.getCards(), self.table.getPot(), amt, Constants.RAISE);
+                        response = self.player.getMove(self.table.getCards(), self.table.getPot(), lastAnte, Constants.RAISE);
                         if response == Constants.CALL:
                             self.player.setPreviousMove(Constants.CALL);
                             self.player.subChips(amt);
                             self.player.addToChipsIn(amt);
                             self.player.setAggression(amt, ante);
+                            print("Adding to pot...");
                             self.table.addToPot(amt);
                         else:
                             turn = Constants.PLAYER;
                             stage = response;
                             break;
-                    successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), amt, self.bot.getAggression(), self.player.getPreviousMove(), self.dealer, self.bot.getChipsIn());
+                    successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), self.player.getPreviousMove(), self.dealer, self.bot.getChipsIn());
                     if self.player.getChips() == 0:
                         turn = Constants.PLAYER;
                         move = constants.ALLIN;
