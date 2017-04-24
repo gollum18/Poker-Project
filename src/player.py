@@ -131,7 +131,7 @@ class Player:
     '''
     def getBet(self, raiseAmt):
         amt = -1;
-        while amt < raiseAmt:
+        while amt < raiseAmt or amt > self.player.getChips():
             try:
                 amt = int(raw_input("Raise By: "));
             except ValueError:
