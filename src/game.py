@@ -120,11 +120,13 @@ class Game:
     '''
     def isGameOver(self):
         if self.roundsSoFar >= self.rounds:
-            printResults();
+            self.printResults();
             return True;
         elif self.player.getChips() == 0:
+            self.printResults();
             return True;
         elif self.bot.getChips() == 0:
+            self.printResults();
             return True;
         return False;
 
