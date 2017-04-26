@@ -240,7 +240,7 @@ class Game:
                     successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), lastAnte, self.bot.getAggression(), self.player.getPreviousMove(), self.dealer, self.bot.getChipsIn());
                     if self.player.getChips() == 0:
                         turn = Constants.PLAYER;
-                        move = constants.ALLIN;
+                        move = Constants.ALLIN;
                         break;
                     elif self.bot.getChips() == 0:
                         turn = Constants.BOT;
