@@ -95,6 +95,24 @@ class Game:
                 percentiles = util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0]); 
                 return nextState[2]*(percentiles[Constants.BOT]-percentiles[Constants.PLAYER]);
 
+    def printResults(self):
+        winner = None;
+        pchips = self.player.getChips();
+        bchips = self.bot.getChips();
+        if pchips > bchips:
+            winner = Constants.PLAYER
+        elif pchips < bchips:
+            winner = Constants.BOT
+        elif pchips == bchips:
+            winner = "SPLIT"
+        print("===================================");
+        print(" After {0} rounds the results are".format(self.roundsSoFar));
+        print("===================================");
+        print(" The player had ${0} chips".format(pchips));
+        print(" Tha bot had ${0} chips".format(bchips));
+        print(" The Winner is: {0}".format(winner));
+        print("===================================");
+            
     '''
     Determines whether the game is over.
     A game is over if there are no more rounds, or a player is out of chips at the end
@@ -102,6 +120,7 @@ class Game:
     '''
     def isGameOver(self):
         if self.roundsSoFar >= self.rounds:
+            printResults();
             return True;
         elif self.player.getChips() == 0:
             return True;
