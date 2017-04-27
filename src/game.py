@@ -117,6 +117,10 @@ class Game:
         print("===================================");
 
     def playRound(self):
+        if self.player.getChips() == 0 or self.bot.getChips() == 0:
+            printResults()
+            return
+        
         # setup for the round
         self.table.addToPot(self.little+self.big);
         self.player.subChips(self.big if self.dealer == Constants.PLAYER else self.little);
@@ -240,7 +244,7 @@ class Game:
                 stage = Constants.EVAL
 
         if stage == Constants.ALLIN:
-            print "A player went all in... The turn is now {0}".format(turn)
+            #print "A player went all in... The turn is now {0}".format(turn)
             
             response = None;
 
@@ -255,12 +259,15 @@ class Game:
                     state = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), Constants.ALLIN, self.dealer, self.bot.getChipsIn())
                     response = self.bot.getMove(state)
                     if response == Constants.CALL:
+                        print("The BOT chose to CALL your ALLIN.")
                         self.bot.setAggression(self.bot.getCall(self.table.getAnte), self.little)
                         self.bot.addToChipsIn(self.bot.getCall(self.table.getAnte()))
                         self.table.addToPot(self.bot.getCall(self.table.getAnte()))
                         self.bot.subChips(self.bot.getCall(self.table.getAnte()))
                         self.table.setAnte(0)
                     else:
+                        print("The BOT chose to FOLD on your ALLIN.")
+                        winner = Constants.PLAYER
                         self.player.addChips(self.table.getPot())
                 else:
                     self.table.setAnte(self.bot.getChips())
@@ -270,12 +277,15 @@ class Game:
                     self.bot.subChips(self.table.getAnte())
                     response = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), Constants.ALLIN)
                     if response == Constants.CALL:
+                        print("The PLAYER chose to CALL the BOTs' ALLIN.")
                         self.player.setAggression(self.player.getCall(self.table.getAnte), self.little)
                         self.player.addToChipsIn(self.player.getCall(self.table.getAnte()))
                         self.table.addToPot(self.player.getCall(self.table.getAnte()))
                         self.player.subChips(self.player.getCall(self.table.getAnte()))
                         self.table.setAnte(0)
                     else:
+                        print("The PLAYER chose to FOLD on the BOTs' ALLIN.")
+                        winner = Constants.BOT
                         self.bot.addChips(self.table.getPot())
                         successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.bot.getPreviousMove())
                         reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
