@@ -4,6 +4,7 @@ class Constants:
     TURN = "TURN";
     RIVER = "RIVER";
     EVAL = "EVAL";
+    NOCHIPSLEFT = "NOCHIPSLEFT";
     TERMINAL = "TERMINAL STATE";
     GENERAL = "GENERAL";
     APPROXIMATE = "APPROXIMATE";

@@ -38,11 +38,11 @@ class Game:
         util.printCards(self.table.getCards());
         print("You have these cards:");
         util.printCards(self.player.getCards());
-        print("THe bot had these cards:");
+        print("The bot had these cards:");
         util.printCards(self.bot.getCards());
 
-        print("The player had the following hand: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))));
-        print("The bot had the following hand: {0}".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))));
+        print("The player had a {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))));
+        print("The bot had had a: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))));
         # Deal out the chips appropriately
         # I know this seems weird but hands in deuces are ranked starting at
         # 1 with 1 being the best hand.
@@ -112,15 +112,11 @@ class Game:
         print(" After {0} rounds the results are".format(self.roundsSoFar));
         print("===================================");
         print(" The player had ${0} chips".format(pchips));
-        print(" Tha bot had ${0} chips".format(bchips));
+        print(" The bot had ${0} chips".format(bchips));
         print(" The Winner is: {0}".format(winner));
         print("===================================");
 
     def playRound(self):
-        if self.player.getChips() == 0 or self.bot.getChips() == 0:
-            printResults()
-            return
-        
         # setup for the round
         self.table.addToPot(self.little+self.big);
         self.player.subChips(self.big if self.dealer == Constants.PLAYER else self.little);
@@ -148,6 +144,7 @@ class Game:
             stage != Constants.EVAL
             and stage != Constants.FOLD
             and stage != Constants.ALLIN
+            and stage != Constants.NOCHIPSLEFT
             ):
             # Deal out all the cards
             if stage == Constants.FLOP:
@@ -168,7 +165,7 @@ class Game:
                 self.table.addCard(self.table.draw());
 
             if self.player.getChips() == 0:
-                stage == Constats.ALLIN
+                stage == Constants.ALLIN
                 break;
             elif self.bot.getChips() == 0:
                 stage == Constants.ALLIN
@@ -234,6 +231,9 @@ class Game:
                             stage == Constants.FOLD
                             turn = Constants.PLAYER
                             break
+                    if self.player.getChips() == 0 or self.bot.getChips() == 0:
+                        stage = Constants.NOCHIPSLEFT
+                        break;
                 # End of turn, swap turns
                 turn = Constants.PLAYER if turn == Constants.BOT else Constants.BOT
             if stage == Constants.FLOP:
@@ -243,7 +243,21 @@ class Game:
             elif stage == Constants.RIVER:
                 stage = Constants.EVAL
 
-        if stage == Constants.ALLIN:
+        # This stage is reached when a call occurs where a player is left with no chips
+        #   treat like and allin
+        if stage == Constants.NOCHIPSLEFT:
+            for i in range(5-len(self.table.getCards())):
+                self.table.addCard(self.table.draw())
+            winner = self.evaluate();
+            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.bot.getPreviousMove())
+            reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
+            cumReward = cumReward + reward
+            if self.bot.getAgent() == Constants.GENERAL:
+                self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+            else:
+                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
+            
+        elif stage == Constants.ALLIN:
             #print "A player went all in... The turn is now {0}".format(turn)
             
             response = None;
@@ -311,9 +325,9 @@ class Game:
                 
         elif stage == Constants.FOLD:
             if turn == Constants.PLAYER:
-                self.player.addChips(self.table.getPot())
-            elif turn == Constants.BOT:
                 self.bot.addChips(self.table.getPot())
+            elif turn == Constants.BOT:
+                self.player.addChips(self.table.getPot())
         elif stage == Constants.EVAL:
             winner = self.evaluate();
             successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), None)
