@@ -41,8 +41,8 @@ class Game:
         print("The bot had these cards:");
         util.printCards(self.bot.getCards());
 
-        print("The player had a {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))));
-        print("The bot had had a: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))));
+        print("The player had: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))));
+        print("The bot had had: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))));
         # Deal out the chips appropriately
         # I know this seems weird but hands in deuces are ranked starting at
         # 1 with 1 being the best hand.
@@ -55,8 +55,8 @@ class Game:
             print("The {0} has won!!".format(Constants.BOT));
             return Constants.BOT;
         else:
-            self.player.addChips(floor(pot/2));
-            self.bot.addChips(floor(pot/2));
+            self.player.addChips(int(floor(pot/2)));
+            self.bot.addChips(int(floor(pot/2)));
             return "TIE";
 
     def getReward(self, state, action, nextState, winner):
@@ -184,10 +184,10 @@ class Game:
                 print("The {0}s' move was {1}.".format(turn, move))
 
                 if move == Constants.ALLIN:
-                    stage = move
+                    stage = Constants.ALLIN
                     break;
                 elif move == Constants.FOLD:
-                    stage = move
+                    stage = Constants.FOLD
                     break;
                 elif move == Constants.RAISE:
                     if turn == Constants.PLAYER:
@@ -200,6 +200,7 @@ class Game:
                         response = self.bot.getMove(state)
                         # was the bots response a call?
                         if response == Constants.CALL:
+                            print("The BOT chose to CALL your RAISE.")
                             self.bot.setAggression(self.bot.getCall(self.table.getAnte()),self.table.getAnte())
                             self.bot.addToChipsIn(self.bot.getCall(self.table.getAnte()))
                             self.table.addToPot(self.bot.getCall(self.table.getAnte()))
@@ -208,8 +209,9 @@ class Game:
                             move = None
                         # was the bots response a fold?
                         else:
+                            print("The BOT chose to FOLD on your RAISE.")
                             self.bot.setAggression(0, self.table.getAnte())
-                            stage == Constants.FOLD
+                            stage = Constants.FOLD
                             turn = Constants.BOT
                             break
                     elif turn == Constants.BOT:
@@ -220,6 +222,7 @@ class Game:
                         self.table.addToPot(self.table.getAnte())
                         response = self.player.getMove(self.table.getCards(), self.table.getPot(), self.table.getAnte(), Constants.RAISE)
                         if response == Constants.CALL:
+                            print("The PLAYER chose to CALL the BOT's RAISE.")
                             self.player.setAggression(self.player.getCall(self.table.getAnte()),self.table.getAnte())
                             self.player.addToChipsIn(self.player.getCall(self.table.getAnte()));
                             self.table.addToPot(self.player.getCall(self.table.getAnte()))
@@ -227,8 +230,9 @@ class Game:
                             self.table.setAnte(0)
                             move = None;
                         else:
+                            print("The PLAYER chose to FOLD on the BOT's RAISE.")
                             self.player.setAggression(0, self.table.getAnte())
-                            stage == Constants.FOLD
+                            stage = Constants.FOLD
                             turn = Constants.PLAYER
                             break
                     if self.player.getChips() == 0 or self.bot.getChips() == 0:
