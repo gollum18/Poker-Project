@@ -149,3 +149,8 @@ class Player:
     '''
     def setAggression(self, amt, ante):
         self.aggression = amt/ante;
+
+    def getCall(self, ante):
+        if self.getChips() < ante:
+            return self.getChips();
+        return ante;
