@@ -9,9 +9,9 @@ class Table:
     Creates a poker table containing the deck, and a means to store the cards.
     '''
     def __init__(self):
-        self.deck = Deck();
-        self.cards = [];
-        self.pot = 0;
+        self.deck = Deck()
+        self.cards = []
+        self.pot = 0
         self.ante = 0
 
     '''
@@ -43,6 +43,12 @@ class Table:
     '''
     def draw(self):
         return self.deck.draw();
+
+    def setAnte(self, ante):
+        self.ante = ante
+
+    def getAnte(self):
+        return self.ante
 
     '''
     Resets the table.
