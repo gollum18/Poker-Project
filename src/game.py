@@ -23,56 +23,58 @@ class Game:
         self.dealer = choice([Constants.PLAYER, Constants.BOT]);
 
     def evaluate(self):
-        pot = self.table.getPot();
-        board = self.table.getCards();
-        pstr = self.eval.evaluate(self.player.getCards(), board);
-        bstr = self.eval.evaluate(self.bot.getCards(), board);
+        pot = self.table.getPot()
+        board = self.table.getCards()
+        pstr = self.eval.evaluate(self.player.getCards(), board)
+        bstr = self.eval.evaluate(self.bot.getCards(), board)
         # Print showdown
-        print("");
-        print("==========================================");
-        print("==========================================");
-        print("                 SHOWDOWN");
-        print("==========================================");
-        print("==========================================");
-        print("Cards on the board:");
-        util.printCards(self.table.getCards());
-        print("You have these cards:");
-        util.printCards(self.player.getCards());
-        print("The bot had these cards:");
-        util.printCards(self.bot.getCards());
+        print("")
+        print("==========================================")
+        print("==========================================")
+        print("                 SHOWDOWN")
+        print("==========================================")
+        print("==========================================")
+        print("Cards on the board:")
+        util.printCards(self.table.getCards())
+        print("You have these cards:")
+        util.printCards(self.player.getCards())
+        print("The bot had these cards:")
+        util.printCards(self.bot.getCards())
 
-        print("The player had: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))));
-        print("The bot had had: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))));
+        print("The player had: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))))
+        print("The bot had had: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))))
         # Deal out the chips appropriately
         # I know this seems weird but hands in deuces are ranked starting at
         # 1 with 1 being the best hand.
         if pstr < bstr:
-            self.player.addChips(pot);
-            print("The {0} has won!!".format(Constants.PLAYER));
-            return Constants.PLAYER;
+            self.player.addChips(pot)
+            print("The {0} has won!!".format(Constants.PLAYER))
+            return Constants.PLAYER
         elif pstr > bstr:
-            self.bot.addChips(pot);
-            print("The {0} has won!!".format(Constants.BOT));
-            return Constants.BOT;
+            self.bot.addChips(pot)
+            print("The {0} has won!!".format(Constants.BOT))
+            return Constants.BOT
         else:
-            self.player.addChips(int(floor(pot/2)));
-            self.bot.addChips(int(floor(pot/2)));
-            return "TIE";
+            self.player.addChips(int(floor(pot/2)))
+            self.bot.addChips(int(floor(pot/2)))
+            return "TIE"
 
     def getReward(self, state, action, nextState, winner):
         if winner == Constants.PLAYER:
-            return -nextState[2];
+            return -nextState[2]
         elif winner == Constants.BOT:
-            return nextState[2];
+            return nextState[2]
         else:
             if action == Constants.CALL:
-                return 0;
+                return 0
             elif action == Constants.FOLD:
-                return -nextState[2];
+                return -nextState[2]
             else:
-                percentiles = util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0]); 
-                return nextState[2]*(percentiles[Constants.BOT]-percentiles[Constants.PLAYER]);
-
+                percentiles = util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0]) 
+                if action == Constants.ALLIN:
+                    return nextState[2]*(percentiles[Constants.BOT]-percentiles[Constants.PLAYER])
+                else:
+                    return -state[3]+(nextState[2]*percentile[Constants.BOT])
     '''
     Determines whether the game is over.
     A game is over if there are no more rounds, or a player is out of chips at the end
