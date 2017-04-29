@@ -57,24 +57,30 @@ class Game:
         else:
             self.player.addChips(int(floor(pot/2)))
             self.bot.addChips(int(floor(pot/2)))
-            return "TIE"
+            return Constants.SPLIT
 
     def getReward(self, state, action, nextState, winner):
+        reward = 0;
         if winner == Constants.PLAYER:
-            return -nextState[2]
+            reward = -nextState[2]
         elif winner == Constants.BOT:
+            reward = nextState[2]
             return nextState[2]
+        elif winner == Constants.SPLIT:
+            reward = int(floor(nextState[2]/2))
         else:
             if action == Constants.CALL:
-                return 0
+                reward = 0
             elif action == Constants.FOLD:
-                return -nextState[2]
+                reward = -nextState[7]
             else:
-                percentiles = util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0]) 
+                percentiles = util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0])
                 if action == Constants.ALLIN:
-                    return nextState[2]*(percentiles[Constants.BOT]-percentiles[Constants.PLAYER])
+                    reward = nextState[2]
                 else:
-                    return -state[3]+(nextState[2]*percentile[Constants.BOT])
+                    reward = nextState[7]
+                reward *= percentiles[Constants.BOT]-percentiles[Constants.PLAYER]
+        return reward;
     '''
     Determines whether the game is over.
     A game is over if there are no more rounds, or a player is out of chips at the end
