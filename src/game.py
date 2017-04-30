@@ -42,7 +42,7 @@ class Game:
         util.printCards(self.bot.getCards())
 
         print("The player had: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(pstr))))
-        print("The bot had had: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))))
+        print("The bot had: {0}.".format(self.eval.class_to_string(self.eval.get_rank_class(bstr))))
         # Deal out the chips appropriately
         # I know this seems weird but hands in deuces are ranked starting at
         # 1 with 1 being the best hand.
@@ -54,10 +54,13 @@ class Game:
             self.bot.addChips(pot)
             print("The {0} has won!!".format(Constants.BOT))
             return Constants.BOT
-        else:
+        elif pstr == bstr:
+            print("The players have split the pot!!")
             self.player.addChips(int(floor(pot/2)))
             self.bot.addChips(int(floor(pot/2)))
             return Constants.SPLIT
+        else:
+            return None
 
     def getReward(self, state, action, nextState, winner):
         reward = 0;
@@ -74,7 +77,8 @@ class Game:
             elif action == Constants.FOLD:
                 reward = -nextState[7]
             else:
-                percentiles = util.winningPercentage(self.eval,self.player.getCards(),nextState[1],nextState[0])
+                percentiles = util.winningPercentage(self.eval,self.player.getCards(),self.bot.getCards(),nextState[0])
+                print percentiles
                 if action == Constants.ALLIN:
                     reward = nextState[2]
                 else:
@@ -197,6 +201,14 @@ class Game:
                 elif move == Constants.FOLD:
                     stage = Constants.FOLD
                     break;
+                elif turn == Constants.BOT and move == Constants.CALL:
+                    successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.bot.getPreviousMove())
+                    reward = self.getReward(state, self.bot.getPreviousMove(), successor, None)
+                    cumReward = cumReward + reward
+                    if self.bot.getAgent() == Constants.GENERAL:
+                        self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                    else:
+                        self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
                 elif move == Constants.RAISE:
                     if turn == Constants.PLAYER:
                         self.table.setAnte(self.player.getBet(self.little))
