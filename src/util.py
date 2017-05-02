@@ -48,7 +48,7 @@ def read(agent):
     for line in lines:
         split = line.split();
         if agent == Constants.GENERAL:
-            table[int(split[0]), split[1]] = float(split[2]);
+            table[long(split[0]), split[1]] = float(split[2]);
         else:
             table[split[0]] = float(split[1]);
     return table;
@@ -84,7 +84,7 @@ Gets the first half of the key for the q-learning dictionary.
 Uniquely identifies a hand/community combination.
 '''
 def getKey(cards):
-    return sum(cards);
+    return long(sum(cards));
 
 '''
 Determines the chipsIn ratio for us.
