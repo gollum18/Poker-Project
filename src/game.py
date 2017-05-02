@@ -128,18 +128,42 @@ class Game:
         print("===================================")
 
     def playRound(self):
-        # setup for the round
-        self.table.addToPot(self.little+self.big)
-        self.player.subChips(self.big if self.dealer == Constants.PLAYER else self.little)
-        self.bot.subChips(self.big if self.dealer == Constants.BOT else self.little)
-        self.player.addToChipsIn(self.big if self.dealer == Constants.PLAYER else self.little)
-        self.bot.addToChipsIn(self.big if self.dealer == Constants.BOT else self.little)
+        # Take out the blinds
+        if self.dealer == Constants.PLAYER:
+            # Check if the player has enough for the big blind
+            if self.player.getChips() < self.big:
+                self.table.addToPot(self.player.getChips())
+                self.player.subChips(self.player.getChips())
+            else:
+                self.table.addToPot(self.big)
+                self.player.subChips(self.big)
+            # Check if the bot has enough for the little blind
+            if self.bot.getChips() < self.little:
+                self.table.addToPot(self.bot.getChips())
+                self.bot.subChips(self.bot.getChips())
+            else:
+                self.table.addToPot(self.little)
+                self.bot.subChips(self.little)
+        else:
+            # Check if the bit has enough for the big blind
+            if self.bot.getChips() < self.big:
+                self.table.addToPot(self.bot.getChips())
+                self.bot.subChips(self.bot.getChips())
+            else:
+                self.table.addToPot(self.big)
+                self.bot.subChips(self.big)
+            # Check if the player has enough for the little blind
+            if self.player.getChips() < self.little:
+                self.table.addToPot(self.player.getChips())
+                self.player.subChips(self.player.getChips())
+            else:
+                self.table.addToPot(self.little)
+                self.player.subChips(self.little)
 
         turn = Constants.PLAYER if self.dealer == Constants.BOT else Constants.PLAYER
         stage = Constants.FLOP
         move = None
         state = None
-        successor = None
         cumReward = 0
 
         if self.player.getChips() == 0 or self.bot.getChips() == 0:
