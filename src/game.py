@@ -239,9 +239,9 @@ class Game:
                             reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
                             cumReward = cumReward + reward
                             if self.bot.getAgent() == Constants.GENERAL:
-                                self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                                self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
                             else:
-                                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
+                                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
                             stage = Constants.FOLD
                             turn = Constants.BOT
                             break
@@ -272,9 +272,9 @@ class Game:
                             reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
                             cumReward = cumReward + reward
                             if self.bot.getAgent() == Constants.GENERAL:
-                                self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                                self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
                             else:
-                                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
+                                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
                             stage = Constants.FOLD
                             turn = Constants.PLAYER
                             break
@@ -300,9 +300,9 @@ class Game:
             reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
             cumReward = cumReward + reward
             if self.bot.getAgent() == Constants.GENERAL:
-                self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
             else:
-                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
+                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
             
         elif stage == Constants.ALLIN:
             #print "A player went all in... The turn is now {0}".format(turn)
@@ -334,9 +334,9 @@ class Game:
                         reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
                         cumReward = cumReward + reward
                         if self.bot.getAgent() == Constants.GENERAL:
-                            self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                            self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
                         else:
-                            self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
+                            self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
                         self.player.addChips(self.table.getPot())
                 else:
                     self.table.setAnte(self.bot.getChips())
@@ -360,9 +360,9 @@ class Game:
                         reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
                         cumReward = cumReward + reward
                         if self.bot.getAgent() == Constants.GENERAL:
-                            self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                            self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
                         else:
-                            self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
+                            self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
                         self.bot.addChips(self.table.getPot())
                             
             if response == Constants.CALL:
@@ -375,9 +375,9 @@ class Game:
                 reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
                 cumReward = cumReward + reward
                 if self.bot.getAgent() == Constants.GENERAL:
-                    self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                    self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
                 else:
-                    self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
+                    self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
                 
         elif stage == Constants.FOLD:
             if turn == Constants.PLAYER:
@@ -393,7 +393,7 @@ class Game:
             if self.bot.getAgent() == Constants.GENERAL:
                 self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
             else:
-                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
+                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
 
         self.roundsSoFar = self.roundsSoFar + 1;
         self.player.empty();
