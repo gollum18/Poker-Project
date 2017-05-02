@@ -156,7 +156,8 @@ class Game:
             and stage != Constants.FOLD
             and stage != Constants.ALLIN
             and stage != Constants.NOCHIPSLEFT
-            ):
+            and self.player.getChips() != 0
+            and self.bot.getChips() != 0):
             # Deal out all the cards
             if stage == Constants.FLOP:
                 for i in range (0, 5):
@@ -224,7 +225,7 @@ class Game:
                             self.bot.addToChipsIn(self.bot.getCall(self.table.getAnte()))
                             self.table.addToPot(self.bot.getCall(self.table.getAnte()))
                             self.bot.subChips(self.bot.getCall(self.table.getAnte()))
-                            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.bot.getPreviousMove(), self.dealer, self.bot.getChipsIn())
+                            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), response, self.dealer, self.bot.getChipsIn())
                             reward = self.getReward(state, self.bot.getPreviousMove(), successor, None)
                             cumReward = cumReward + reward
                             self.table.setAnte(0)
@@ -233,6 +234,14 @@ class Game:
                         else:
                             print("The BOT chose to FOLD on your RAISE.")
                             self.bot.setAggression(0, self.table.getAnte())
+                            winner = Constants.PLAYER
+                            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), response, self.dealer, self.bot.getChipsIn())
+                            reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
+                            cumReward = cumReward + reward
+                            if self.bot.getAgent() == Constants.GENERAL:
+                                self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                            else:
+                                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
                             stage = Constants.FOLD
                             turn = Constants.BOT
                             break
@@ -258,6 +267,14 @@ class Game:
                         else:
                             print("The PLAYER chose to FOLD on the BOT's RAISE.")
                             self.player.setAggression(0, self.table.getAnte())
+                            winner = Constants.BOT
+                            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.bot.getPreviousMove(), self.dealer, self.bot.getChipsIn())
+                            reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
+                            cumReward = cumReward + reward
+                            if self.bot.getAgent() == Constants.GENERAL:
+                                self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                            else:
+                                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
                             stage = Constants.FOLD
                             turn = Constants.PLAYER
                             break
@@ -308,14 +325,19 @@ class Game:
                         self.bot.addToChipsIn(self.bot.getCall(self.table.getAnte()))
                         self.table.addToPot(self.bot.getCall(self.table.getAnte()))
                         self.bot.subChips(self.bot.getCall(self.table.getAnte()))
+                        self.table.setAnte(0)
                     else:
                         print("The BOT chose to FOLD on your ALLIN.")
+                        self.bot.setAggression(0, self.table.getAnte())
                         winner = Constants.PLAYER
-                        successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.bot.getPreviousMove(), self.dealer, self.bot.getChipsIn())
+                        successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), response, self.dealer, self.bot.getChipsIn())
                         reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
                         cumReward = cumReward + reward
+                        if self.bot.getAgent() == Constants.GENERAL:
+                            self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
+                        else:
+                            self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
                         self.player.addChips(self.table.getPot())
-                    self.table.setAnte(0)
                 else:
                     self.table.setAnte(self.bot.getChips())
                     self.table.addToPot(self.table.getAnte())
@@ -332,15 +354,16 @@ class Game:
                         self.table.setAnte(0)
                     else:
                         print("The PLAYER chose to FOLD on the BOTs' ALLIN.")
+                        self.player.setAggression(0, self.table.getAnte())
                         winner = Constants.BOT
                         successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.bot.getPreviousMove(), self.dealer, self.bot.getChipsIn())
                         reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
                         cumReward = cumReward + reward
-                        self.bot.addChips(self.table.getPot())
                         if self.bot.getAgent() == Constants.GENERAL:
                             self.bot.update(state, self.bot.getPreviousMove(), successor, reward)
                         else:
                             self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, reward)
+                        self.bot.addChips(self.table.getPot())
                             
             if response == Constants.CALL:
                 # Deal out the remaining cards
@@ -359,13 +382,9 @@ class Game:
         elif stage == Constants.FOLD:
             if turn == Constants.PLAYER:
                 self.bot.addChips(self.table.getPot())
-                winner = Constants.BOT
             elif turn == Constants.BOT:
                 self.player.addChips(self.table.getPot())
-                winner = Constants.PLAYER
-            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.bot.getPreviousMove(), self.dealer, self.bot.getChipsIn())
-            reward = self.getReward(state, self.bot.getPreviousMove(), successor, winner)
-            cumReward = cumReward + reward
+                
         elif stage == Constants.EVAL:
             winner = self.evaluate();
             successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(), self.bot.getAggression(), self.bot.getPreviousMove(), self.dealer, self.bot.getChipsIn())
