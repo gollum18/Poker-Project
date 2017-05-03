@@ -271,7 +271,7 @@ class Game:
                             reward = self.getReward(state, self.bot.getPreviousMove(), successor)
                             cumReward = cumReward + reward
                             if self.bot.getAgent() == Constants.GENERAL:
-                                self.bot.update(state, self.bot.getPreviouseMove(), successor, cumReward)
+                                self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
                             else:
                                 self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
                             stage = Constants.FOLD
