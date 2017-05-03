@@ -27,7 +27,7 @@ In order to download and run this software please ensure that you first have an 
 
 5.) Finally, open a command prompt (if on windows) or a terminal (if on Linux) and navigate to the "src" folder
 
-6.) Once there tpye this command without quotes...
+6.) Once there type this command without quotes...
 
 "python play.py" (if on Windows)
 
