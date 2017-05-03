@@ -324,6 +324,16 @@ class Game:
             elif stage == Constants.RIVER:
                 stage = Constants.EVAL
 
+        # Check if a player does not have cards, if so deal them out
+        if len(self.player.getCards()) == 0:
+            for i in range(0, 2):
+                if self.dealer == Constants.BOT:
+                    self.player.addCard(self.table.draw())
+                    self.bot.addCard(self.table.draw())
+                else:
+                    self.bot.addCard(self.table.draw())
+                    self.player.addCard(self.table.draw())
+
         # This stage is reached when a call occurs where a player is left with no chips
         #   treat like and allin
         if stage == Constants.NOCHIPSLEFT:
