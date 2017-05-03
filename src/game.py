@@ -137,6 +137,15 @@ class Game:
         print("===================================")
 
     def playRound(self):
+        print("")
+        print("==========================================")
+        print("==========================================")
+        print("            BEGINNING ROUND #{0}".format(self.roundsSoFar + 1))
+        print("             YOUR CHIPS: ${0}".format(self.player.getChips()))
+        print("           OPPONENT CHIPS: ${0}".format(self.bot.getChips()))
+        print("==========================================")
+        print("==========================================")
+
         # Take out the blinds
         if self.dealer == Constants.PLAYER:
             # Check if the player has enough for the big blind
@@ -176,16 +185,12 @@ class Game:
         cumReward = 0
 
         if self.player.getChips() == 0 or self.bot.getChips() == 0:
+            print ""
+            print "====================================================================="
+            print "  A player has no chips remaining after blinds, entering showdown."
+            print "====================================================================="
+            print ""
             stage = Constants.NOCHIPSLEFT
-        
-        print("")
-        print("==========================================")
-        print("==========================================")
-        print("            BEGINNING ROUND #{0}".format(self.roundsSoFar+1))
-        print("             YOUR CHIPS: ${0}".format(self.player.getChips()))
-        print("           OPPONENT CHIPS: ${0}".format(self.bot.getChips()))
-        print("==========================================")
-        print("==========================================")
 
         while (
             stage != Constants.EVAL
@@ -335,21 +340,23 @@ class Game:
                     self.player.addCard(self.table.draw())
 
         # This stage is reached when a call occurs where a player is left with no chips
-        #   treat like and allin
+        #   treat like and allin, OR the blind takes out a players remaining chips
         if stage == Constants.NOCHIPSLEFT:
             state = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(),
                      self.bot.getAggression(), self.bot.getPreviousMove(), self.dealer, self.bot.getChipsIn())
             for i in range(5-len(self.table.getCards())):
                 self.table.addCard(self.table.draw())
             winner = self.evaluate()
-            successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(),
-                         self.bot.getAggression(), self.bot.getPreviousMove(), self.dealer, self.bot.getChipsIn(), winner)
-            reward = self.getReward(state, self.bot.getPreviousMove(), successor)
-            cumReward = cumReward + reward
-            if self.bot.getAgent() == Constants.GENERAL:
-                self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
-            else:
-                self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
+            # Only update if there were moves prior
+            if self.bot.getPreviousMove():
+                successor = (self.table.getCards(), self.bot.getCards(), self.table.getPot(), self.table.getAnte(),
+                             self.bot.getAggression(), self.bot.getPreviousMove(), self.dealer, self.bot.getChipsIn(), winner)
+                reward = self.getReward(state, self.bot.getPreviousMove(), successor)
+                cumReward = cumReward + reward
+                if self.bot.getAgent() == Constants.GENERAL:
+                    self.bot.update(state, self.bot.getPreviousMove(), successor, cumReward)
+                else:
+                    self.bot.updateApproximate(state, self.bot.getPreviousMove(), successor, cumReward)
             
         elif stage == Constants.ALLIN:
             #print "A player went all in... The turn is now {0}".format(turn)
